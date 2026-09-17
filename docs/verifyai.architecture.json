@@ -14,8 +14,8 @@
       {
         "id": "persistence-delivery",
         "label": "Persistence and organizer delivery",
-        "focus": ["database", "decision", "organizer"],
-        "note": "SQLite hash registry, audit records, and Streamlit organizer review."
+        "focus": ["decision", "supabase", "sqlite", "organizer"],
+        "note": "Dual-mode cloud persistence (Supabase PostgreSQL) with local SQLite fallback and organizer dashboard."
       }
     ]
   },
@@ -34,7 +34,7 @@
       "label": "FastAPI Server",
       "sublabel": "POST /verify :8000",
       "brand": "fastapi",
-      "pos": [260, 260],
+      "pos": [250, 260],
       "size": [150, 60]
     },
     {
@@ -43,7 +43,7 @@
       "label": "Quality & ELA",
       "sublabel": "Laplacian Forensics",
       "brand": "python",
-      "pos": [490, 110],
+      "pos": [480, 110],
       "size": [150, 60]
     },
     {
@@ -52,7 +52,7 @@
       "label": "OCR Engine",
       "sublabel": "EasyOCR & Verhoeff",
       "brand": "pytorch",
-      "pos": [490, 260],
+      "pos": [480, 260],
       "size": [150, 60]
     },
     {
@@ -61,7 +61,7 @@
       "label": "Identity Match",
       "sublabel": "DeepFace & RapidFuzz",
       "brand": "python",
-      "pos": [720, 110],
+      "pos": [710, 110],
       "size": [150, 60]
     },
     {
@@ -70,7 +70,7 @@
       "label": "Duplicate Check",
       "sublabel": "SHA-256 Fingerprint",
       "brand": "python",
-      "pos": [720, 260],
+      "pos": [710, 260],
       "size": [150, 60]
     },
     {
@@ -79,24 +79,33 @@
       "label": "Decision Engine",
       "sublabel": "Weighted Scoring",
       "brand": "python",
-      "pos": [950, 260],
+      "pos": [940, 260],
       "size": [150, 60]
     },
     {
-      "id": "database",
+      "id": "supabase",
       "type": "database",
-      "label": "SQLite Database",
-      "sublabel": "Hashes & Records",
+      "label": "Supabase Cloud",
+      "sublabel": "PostgreSQL & Hashes",
+      "brand": "supabase",
+      "pos": [940, 420],
+      "size": [150, 60]
+    },
+    {
+      "id": "sqlite",
+      "type": "database",
+      "label": "SQLite Local",
+      "sublabel": "Offline Fallback",
       "brand": "sqlite",
-      "pos": [950, 420],
+      "pos": [710, 420],
       "size": [150, 60]
     },
     {
       "id": "organizer",
       "type": "frontend",
       "label": "Organizer UI",
-      "sublabel": "Streamlit Dashboard",
-      "pos": [1180, 260],
+      "sublabel": "Streamlit & TypeScript",
+      "pos": [1170, 260],
       "size": [140, 60]
     }
   ],
@@ -104,7 +113,7 @@
     {
       "kind": "region",
       "label": "VerifyAI Automated Verification Platform Runtime",
-      "wraps": ["api", "forensics", "ocr_engine", "biometrics", "duplicates", "decision", "database"]
+      "wraps": ["api", "forensics", "ocr_engine", "biometrics", "duplicates", "decision", "supabase", "sqlite"]
     }
   ],
   "connections": [
@@ -156,10 +165,21 @@
       "label": "fraud flag"
     },
     {
-      "id": "decision-to-db",
+      "id": "decision-to-supabase",
       "from": "decision",
-      "to": "database",
-      "variant": "dashed"
+      "to": "supabase",
+      "label": "cloud sync",
+      "variant": "dashed",
+      "labelDy": 24
+    },
+    {
+      "id": "supabase-to-sqlite",
+      "from": "supabase",
+      "to": "sqlite",
+      "label": "offline mirror",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "right"
     },
     {
       "id": "decision-to-organizer",
@@ -174,7 +194,7 @@
       "dot": "cyan",
       "title": "Ingestion & Forensics",
       "items": [
-        "Participant uploads ID document image and optional selfie via multipart form",
+        "Participant uploads ID document image and optional selfie via multipart form or web portal",
         "Stage 1 evaluates Laplacian blur variance and Error Level Analysis (ELA) tampering artifacts",
         "Stage 2 uses a pluggable OCR adapter with Aadhaar Verhoeff checksum algorithm"
       ]
@@ -183,18 +203,18 @@
       "dot": "emerald",
       "title": "Biometrics & Fraud Defense",
       "items": [
-        "Stage 3 matches selfie face embeddings with ID photo via DeepFace",
-        "RapidFuzz validates participant name against registration form",
-        "Stage 4 detects duplicate IDs and serial reuse across different names via SHA-256 hashes"
+        "Stage 3 matches selfie face embeddings with ID photo via DeepFace and validates form name via RapidFuzz",
+        "Stage 4 computes SHA-256 fingerprint of ID document to detect reuse across different registrants",
+        "Cloud duplicate detection queries Supabase id_hashes index with sub-millisecond lookups"
       ]
     },
     {
       "dot": "violet",
-      "title": "Decision & Review",
+      "title": "Decision & Dual-Mode Persistence",
       "items": [
         "Stage 5 computes weighted confidence scores and enforces event eligibility rules",
-        "Generates 3-tier verdict (Approved, Manual Review, Rejected) with plain-English reasons",
-        "Streamlit organizer dashboard provides real-time review, audit history, and manual overrides"
+        "Dual-mode database adapter writes directly to Supabase cloud with resilient SQLite offline fallback",
+        "Streamlit dashboard provides live review, ELA heatmaps, face audit, and manual overrides"
       ]
     }
   ]
