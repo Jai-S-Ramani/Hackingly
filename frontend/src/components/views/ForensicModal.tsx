@@ -10,12 +10,14 @@ import {
   ZoomIn
 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
+import { useToastStore } from '../../store/useToastStore';
 import { Modal } from '../ui/Modal';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 
 export const ForensicModal: React.FC = () => {
   const { selectedRegistration, setSelectedRegistration, updateReviewDecision } = useAppStore();
+  const { addToast } = useToastStore();
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [reviewNotes, setReviewNotes] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
@@ -27,9 +29,17 @@ export const ForensicModal: React.FC = () => {
   const handleDecision = async (decision: 'approved' | 'rejected') => {
     setIsUpdating(true);
     const note = reviewNotes.trim() || (decision === 'approved' ? 'Approved by lead verifier' : 'Rejected after forensic inspection');
-    await updateReviewDecision(selectedRegistration.id, decision, note);
+    const success = await updateReviewDecision(selectedRegistration.id, decision, note);
     setIsUpdating(false);
     setSelectedRegistration(null);
+
+    if (success) {
+      addToast({
+        type: decision === 'approved' ? 'success' : 'error',
+        title: `Applicant ${decision === 'approved' ? 'Approved' : 'Rejected'}`,
+        description: `Record ${selectedRegistration.id} updated in database: ${note}`,
+      });
+    }
   };
 
   return (

@@ -22,6 +22,9 @@ interface AppState {
   commandPaletteOpen: boolean;
   setCommandPaletteOpen: (open: boolean) => void;
 
+  mobileMenuOpen: boolean;
+  setMobileMenuOpen: (open: boolean) => void;
+
   activePreset: JudgePreset | null;
   setActivePreset: (preset: JudgePreset | null) => void;
 
@@ -33,7 +36,7 @@ interface AppState {
 
 export const useAppStore = create<AppState>((set, get) => ({
   activeTab: 'hub',
-  setActiveTab: (activeTab) => set({ activeTab }),
+  setActiveTab: (activeTab) => set({ activeTab, mobileMenuOpen: false }),
 
   registrations: [],
   isLoading: false,
@@ -54,6 +57,9 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   commandPaletteOpen: false,
   setCommandPaletteOpen: (commandPaletteOpen) => set({ commandPaletteOpen }),
+
+  mobileMenuOpen: false,
+  setMobileMenuOpen: (mobileMenuOpen) => set({ mobileMenuOpen }),
 
   activePreset: null,
   setActivePreset: (activePreset) => set({ activePreset }),

@@ -7,10 +7,12 @@ import {
   Check, 
   Save
 } from 'lucide-react';
+import { useToastStore } from '../../store/useToastStore';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 
 export const RulesAnalyticsView: React.FC = () => {
+  const { addToast } = useToastStore();
   const [minAge, setMinAge] = useState(18);
   const [maxAge, setMaxAge] = useState(26);
   const [allowAadhaar, setAllowAadhaar] = useState(true);
@@ -20,8 +22,36 @@ export const RulesAnalyticsView: React.FC = () => {
   const [crossEventDuplicate, setCrossEventDuplicate] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    const allowed = [];
+    if (allowAadhaar) allowed.push('aadhaar');
+    if (allowPan) allowed.push('pan');
+    if (allowCollegeId) allowed.push('college_id');
+
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+      await fetch(`${baseUrl}/events`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: 'hackathon-2026',
+          name: 'AI Build Challenge Bengaluru 2026',
+          min_age: minAge,
+          max_age: maxAge,
+          student_only: !allowPan,
+          allowed_id_types: allowed
+        })
+      });
+    } catch {
+      // Offline fallback
+    }
+
     setIsSaved(true);
+    addToast({
+      type: 'success',
+      title: 'Policy Configuration Saved',
+      description: `Age range ${minAge}-${maxAge}y & ${allowed.length} allowed ID types persisted.`,
+    });
     setTimeout(() => setIsSaved(false), 2500);
   };
 

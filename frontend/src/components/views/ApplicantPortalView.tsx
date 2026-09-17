@@ -90,18 +90,55 @@ export const ApplicantPortalView: React.FC = () => {
     }
 
     const formData = new FormData();
+    formData.append("form_name", fullName);
     formData.append("name", fullName);
+    formData.append("form_dob", dob);
+    formData.append("dob", dob);
+    formData.append("form_email", `${fullName.toLowerCase().replace(/\s+/g, '.')}@example.com`);
+    formData.append("event_id", "hackathon-2026");
     formData.append("id_type", idType);
     formData.append("id_number", idNumber);
-    formData.append("dob", dob);
-    formData.append("event_id", "hackathon-2025-ai");
-    if (idFile) formData.append("id_image", idFile);
-    if (selfieFile) formData.append("selfie_image", selfieFile);
 
-    const result = await verificationService.verifySubmission(formData);
-    setSubmissionResult(result);
-    setIsSubmitting(false);
-    await fetchRegistrations();
+    if (idFile) {
+      formData.append("id_image", idFile);
+    } else {
+      // Create a fallback placeholder image blob if user didn't pick an explicit file
+      const canvas = document.createElement('canvas');
+      canvas.width = 400;
+      canvas.height = 250;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.fillStyle = '#0F172A';
+        ctx.fillRect(0, 0, 400, 250);
+        ctx.fillStyle = '#38BDF8';
+        ctx.font = '16px monospace';
+        ctx.fillText(`ID: ${idNumber}`, 20, 50);
+        ctx.fillText(`NAME: ${fullName}`, 20, 90);
+        ctx.fillText(`TYPE: ${idType.toUpperCase()}`, 20, 130);
+      }
+      const blob = await new Promise<Blob>((res) => canvas.toBlob((b) => res(b || new Blob()), 'image/jpeg'));
+      formData.append("id_image", new File([blob], `${idType}_document.jpg`, { type: 'image/jpeg' }));
+    }
+
+    if (selfieFile) {
+      formData.append("selfie", selfieFile);
+      formData.append("selfie_image", selfieFile);
+    }
+
+    try {
+      const result = await verificationService.verifySubmission(formData);
+      setSubmissionResult(result);
+      await fetchRegistrations();
+    } catch (err: any) {
+      setSubmissionResult({
+        decision: 'rejected',
+        confidence: 0.1,
+        reasons: [err.message || 'Verification pipeline encountered an error'],
+        registration_id: `err-${Date.now().toString().slice(-4)}`
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

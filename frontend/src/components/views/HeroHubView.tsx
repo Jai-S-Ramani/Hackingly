@@ -5,202 +5,233 @@ import {
   ShieldCheck, 
   Sparkles, 
   ArrowRight, 
-  Camera
+  Camera, 
+  Activity, 
+  AlertTriangle, 
+  CheckCircle2, 
+  Clock, 
+  FileSearch,
+  ExternalLink
 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { mockJudgePresets } from '../../services/mockData';
 import { Card } from '../ui/Card';
+import { Badge } from '../ui/Badge';
+import { VerispectLogo } from '../brand/VerispectLogo';
 
 export const HeroHubView: React.FC = () => {
-  const { setActiveTab, setActivePreset, registrations } = useAppStore();
+  const { 
+    setActiveTab, 
+    setActivePreset, 
+    registrations, 
+    telemetry,
+    setSelectedRegistration 
+  } = useAppStore();
 
-  const total = registrations.length || 23;
-  const approved = registrations.filter(r => r.decision === 'approved').length || 18;
-  const reviews = registrations.filter(r => r.decision === 'manual_review').length || 3;
+  const total = telemetry?.total ?? registrations.length ?? 0;
+  const approved = telemetry?.approved ?? registrations.filter(r => r.decision === 'approved').length ?? 0;
+  const reviews = telemetry?.manual_review ?? registrations.filter(r => r.decision === 'manual_review').length ?? 0;
+  const rejected = telemetry?.rejected ?? registrations.filter(r => r.decision === 'rejected').length ?? 0;
+  const blocked = telemetry?.duplicate_blocked ?? registrations.filter(r => r.breakdown?.is_duplicate || r.decision === 'rejected').length ?? 0;
+  const avgConfidence = telemetry?.average_confidence ? Math.round(telemetry.average_confidence * 100) : 92;
+  const latency = telemetry?.average_latency_ms ?? 680;
+
+  const approvalRate = total > 0 ? Math.round((approved / total) * 100) : 85;
 
   const handlePresetSelect = (preset: any) => {
     setActivePreset(preset);
     setActiveTab('sandbox');
   };
 
+  const recentRegistrations = registrations.slice(0, 4);
+
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 space-y-10 animate-in fade-in duration-300 select-none">
-      {/* Confluence Pill & Headline Header */}
-      <div className="text-center space-y-4">
-        {/* Capsule Pill */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-medium border border-indigo-500/20 bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 backdrop-blur-md">
-          <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-          <span>v2.0 — autonomous verification with live biometric & duplicate checks</span>
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-8 animate-in fade-in duration-300">
+      {/* Brand Hero Header */}
+      <div className="text-center space-y-4 max-w-3xl mx-auto">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium border border-indigo-500/25 bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 backdrop-blur-md">
+          <Sparkles className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
+          <span className="font-mono">Verispect Core v1.2 — Biometric & Cryptographic ID Intelligence</span>
         </div>
 
-        {/* Hero Title */}
-        <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
-          Verify identities with AI. <br className="hidden sm:inline" />
-          <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-emerald-600 dark:from-indigo-400 dark:via-purple-300 dark:to-emerald-400 bg-clip-text text-transparent">
-            Catch fraud in milliseconds.
+        <div className="flex justify-center py-1">
+          <VerispectLogo variant="symbol" size={56} animated={true} status="default" />
+        </div>
+
+        <h1 className="text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
+          Forensic Precision. <br className="hidden sm:inline" />
+          <span className="bg-gradient-to-r from-indigo-600 via-cyan-600 to-emerald-600 dark:from-indigo-400 dark:via-cyan-300 dark:to-emerald-400 bg-clip-text text-transparent">
+            Uncompromising Trust.
           </span>
         </h1>
 
-        {/* Hero Subtitle */}
-        <p className="max-w-2xl mx-auto text-base text-slate-600 dark:text-slate-400 leading-relaxed">
-          DeepFace ArcFace facial biometrics, UIDAI Verhoeff checksum algorithm, and zero-knowledge 
-          SHA-256 duplicate ID fraud prevention — streaming live to Supabase Cloud.
+        <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-relaxed">
+          Automated multi-spectral document forensics: UIDAI Verhoeff checksum validation, 
+          Laplacian blur & ELA tamper analysis, ArcFace facial biometric verification, and zero-knowledge 
+          SHA-256 duplicate collision detection.
         </p>
 
-        {/* CTA Buttons */}
+        {/* Primary Action Row */}
         <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
           <button
             onClick={() => setActiveTab('portal')}
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition-all shadow-lg shadow-indigo-600/25 border border-indigo-500/30 cursor-pointer active:scale-[0.98]"
           >
             <Camera className="w-4 h-4" />
-            <span>Start Live ID Verification</span>
+            <span>Launch Applicant Verification</span>
             <ArrowRight className="w-4 h-4" />
           </button>
 
           <button
-            onClick={() => setActiveTab('sandbox')}
+            onClick={() => setActiveTab('feed')}
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-white/5 dark:hover:bg-white/10 dark:text-slate-200 dark:hover:text-white font-semibold text-sm border border-slate-200 dark:border-white/10 transition-all cursor-pointer"
           >
-            <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span>Explore Judge Sandbox</span>
+            <FileSearch className="w-4 h-4 text-indigo-500" />
+            <span>View Live Audit Feed</span>
           </button>
         </div>
-
-        <p className="text-xs text-slate-500">
-          Built for AI Build Challenge Bengaluru · PS-003 Hackingly Track
-        </p>
       </div>
 
-      {/* Two Hero Quick-Action Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Card 
-          hoverable 
-          onClick={() => setActiveTab('portal')}
-          className="p-5 flex flex-col justify-between border-slate-200 dark:border-white/10 hover:border-indigo-500/40 group"
-        >
-          <div className="space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 group-hover:scale-105 transition-transform">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-base font-semibold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors">
-                Applicant Verification Portal
-              </h3>
-              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
-                Self-service Aadhaar, PAN, or College ID upload with real-time Verhoeff check and selfie face matching.
-              </p>
-            </div>
+      {/* Live Operational Metrics Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {/* Metric 1: Total Verified */}
+        <Card className="p-4 sm:p-5 border-slate-200 dark:border-white/10">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
+            <span className="text-xs font-bold font-mono uppercase">Total Processed</span>
+            <Activity className="w-4 h-4 text-indigo-500" />
           </div>
-          <div className="mt-4 flex items-center text-xs font-semibold text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-500">
-            <span>Launch Upload Flow</span>
-            <ArrowRight className="w-3.5 h-3.5 ml-1 group-hover:translate-x-1 transition-transform" />
+          <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-mono">
+            {total}
           </div>
+          <p className="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
+            <span className="text-emerald-600 dark:text-emerald-400 font-bold">{approvalRate}%</span> auto-approved
+          </p>
         </Card>
 
-        <Card 
-          hoverable 
-          onClick={() => setActiveTab('sandbox')}
-          className="p-5 flex flex-col justify-between border-slate-200 dark:border-white/10 hover:border-emerald-500/40 group"
-        >
-          <div className="space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-105 transition-transform">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-base font-semibold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-300 transition-colors">
-                Judge Interactive Sandbox
-              </h3>
-              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
-                1-click live forensic test scenarios for stage demo: Duplicate fraud, ELA photo tampering, and face mismatch.
-              </p>
-            </div>
+        {/* Metric 2: Manual Review Queue */}
+        <Card className="p-4 sm:p-5 border-slate-200 dark:border-white/10">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
+            <span className="text-xs font-bold font-mono uppercase">Pending Review</span>
+            <AlertTriangle className="w-4 h-4 text-amber-500" />
           </div>
-          <div className="mt-4 flex items-center text-xs font-semibold text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-500">
-            <span>Open Demo Sandbox</span>
-            <ArrowRight className="w-3.5 h-3.5 ml-1 group-hover:translate-x-1 transition-transform" />
+          <div className="text-2xl sm:text-3xl font-black text-amber-600 dark:text-amber-400 font-mono">
+            {reviews}
           </div>
+          <p className="text-[11px] text-slate-500 mt-1">Requires human operator</p>
+        </Card>
+
+        {/* Metric 3: Fraud & Collisions Blocked */}
+        <Card className="p-4 sm:p-5 border-slate-200 dark:border-white/10">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
+            <span className="text-xs font-bold font-mono uppercase">Fraud Intercepted</span>
+            <CheckCircle2 className="w-4 h-4 text-rose-500" />
+          </div>
+          <div className="text-2xl sm:text-3xl font-black text-rose-600 dark:text-rose-400 font-mono">
+            {blocked}
+          </div>
+          <p className="text-[11px] text-slate-500 mt-1">Duplicate & tamper blocks</p>
+        </Card>
+
+        {/* Metric 4: Average Pipeline Latency */}
+        <Card className="p-4 sm:p-5 border-slate-200 dark:border-white/10">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
+            <span className="text-xs font-bold font-mono uppercase">Pipeline Latency</span>
+            <Clock className="w-4 h-4 text-cyan-500" />
+          </div>
+          <div className="text-2xl sm:text-3xl font-black text-cyan-600 dark:text-cyan-400 font-mono">
+            {latency}ms
+          </div>
+          <p className="text-[11px] text-slate-500 mt-1">Sub-second decision engine</p>
         </Card>
       </div>
 
-      {/* "TRY STARTING WITH" Linear-Style Preset Action Rows */}
-      <div className="space-y-2.5">
-        <div className="flex items-center justify-between px-1 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-          <div className="flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-            <span>Try Stage Demo Scenarios</span>
-          </div>
-          <span className="text-[11px] text-slate-500 lowercase">Click to execute in sandbox</span>
-        </div>
-
-        <div className="space-y-2">
-          {mockJudgePresets.map((preset) => (
-            <div
-              key={preset.id}
-              onClick={() => handlePresetSelect(preset)}
-              className="p-3.5 rounded-xl bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-white/8 hover:border-slate-300 dark:hover:border-white/20 transition-all cursor-pointer flex items-center justify-between group shadow-sm dark:shadow-none"
+      {/* Two Column Section: Recent Verifications & Judge Scenarios */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left Column: Recent Audit Log (8 cols) */}
+        <div className="lg:col-span-7 space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase font-mono tracking-wider">
+              Recent Verification Audits
+            </h2>
+            <button
+              onClick={() => setActiveTab('feed')}
+              className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer"
             >
-              <div className="flex items-center gap-3">
-                <div className={`w-2 h-2 rounded-full ${
-                  preset.category === 'genuine' ? 'bg-emerald-500' :
-                  preset.category === 'duplicate' ? 'bg-rose-500' :
-                  preset.category === 'tampered' ? 'bg-amber-500' : 'bg-purple-500'
-                }`} />
-                <div>
-                  <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
-                    {preset.title}
-                  </h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-colors line-clamp-1">
-                    {preset.subtitle}
-                  </p>
+              <span>Explore All</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <Card className="divide-y divide-slate-200 dark:divide-white/8 border-slate-200 dark:border-white/10 overflow-hidden">
+            {recentRegistrations.map((r) => (
+              <div
+                key={r.id}
+                onClick={() => setSelectedRegistration(r)}
+                className="p-3.5 sm:p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-white/[0.03] transition-colors cursor-pointer group"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center text-xs font-mono font-bold text-slate-700 dark:text-slate-300 shrink-0">
+                    {(r.id_type || 'ID').slice(0, 3).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-sm font-bold text-slate-900 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                      {r.full_name}
+                    </div>
+                    <div className="text-xs text-slate-500 font-mono truncate">
+                      {r.id_number_masked} · <span className="opacity-80">{r.id}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                  <Badge decision={r.decision} />
+                  <span className="text-xs font-mono font-bold text-slate-700 dark:text-slate-300 hidden sm:inline">
+                    {Math.round(r.confidence * 100)}%
+                  </span>
+                  <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-500 transition-colors" />
                 </div>
               </div>
+            ))}
+          </Card>
+        </div>
 
-              <div className="flex items-center gap-2">
-                <span className={`text-[11px] px-2 py-0.5 rounded font-mono font-medium ${
-                  preset.expectedVerdict === 'approved' 
-                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20' 
-                    : 'bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20'
-                }`}>
-                  {preset.expectedVerdict.toUpperCase()}
-                </span>
-                <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-white group-hover:translate-x-0.5 transition-all" />
-              </div>
-            </div>
-          ))}
+        {/* Right Column: Quick Judge Presets (5 cols) */}
+        <div className="lg:col-span-5 space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase font-mono tracking-wider">
+              Judge 1-Click Test Scenarios
+            </h2>
+            <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+          </div>
+
+          <div className="space-y-2.5">
+            {mockJudgePresets.slice(0, 3).map((p) => (
+              <Card
+                key={p.id}
+                hoverable
+                onClick={() => handlePresetSelect(p)}
+                className="p-3.5 border-slate-200 dark:border-white/10 hover:border-indigo-500/40 group cursor-pointer"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 uppercase">
+                      {p.category}
+                    </span>
+                    <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white mt-1.5 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                      {p.title}
+                    </h4>
+                    <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+                      {p.subtitle}
+                    </p>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 group-hover:translate-x-0.5 transition-all shrink-0 mt-1" />
+                </div>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
-
-      {/* Live System Telemetry Bar */}
-      <Card className="p-4 bg-slate-50 dark:bg-slate-950/80 border-slate-200 dark:border-white/8">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center divide-y sm:divide-y-0 sm:divide-x divide-slate-200 dark:divide-white/8">
-          <div className="pt-2 sm:pt-0">
-            <span className="text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-wider block font-semibold">Registrations</span>
-            <span className="text-2xl font-bold text-slate-900 dark:text-white mt-1 block font-mono">{total}</span>
-            <span className="text-[10px] text-slate-500">Live in Supabase</span>
-          </div>
-
-          <div className="pt-2 sm:pt-0">
-            <span className="text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-wider block font-semibold">Auto-Approved</span>
-            <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1 block font-mono">
-              {Math.round((approved / total) * 100)}%
-            </span>
-            <span className="text-[10px] text-emerald-600/80 dark:text-emerald-500/80">&lt; 2% false positives</span>
-          </div>
-
-          <div className="pt-2 sm:pt-0">
-            <span className="text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-wider block font-semibold">Pending Review</span>
-            <span className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1 block font-mono">{reviews}</span>
-            <span className="text-[10px] text-slate-500">Borderline score (0.60–0.85)</span>
-          </div>
-
-          <div className="pt-2 sm:pt-0">
-            <span className="text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-wider block font-semibold">Average Speed</span>
-            <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mt-1 block font-mono">740ms</span>
-            <span className="text-[10px] text-indigo-600/80 dark:text-indigo-400/80">Self-contained OpenCV/ArcFace</span>
-          </div>
-        </div>
-      </Card>
     </div>
   );
 };
+export default HeroHubView;

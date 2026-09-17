@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { ToastContainer } from "@/components/ui/Toast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,8 +14,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "VerifyAI — Autonomous Identity & Eligibility Verification Platform",
-  description: "AI-powered biometric face matching, Verhoeff Aadhaar verification, and duplicate hash abuse detection for Hackingly (PS-003).",
+  title: "Verispect — Intelligent Forensic Document Verification SaaS",
+  description: "Enterprise forensic document inspection, OCR extraction, biometric identity verification, and anti-tamper intelligence.",
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 export default function RootLayout({
@@ -51,6 +55,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col font-sans transition-colors duration-200">
         {children}
+        <ToastContainer />
       </body>
     </html>
   );

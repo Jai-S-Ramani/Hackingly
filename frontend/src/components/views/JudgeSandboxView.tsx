@@ -40,11 +40,30 @@ export const JudgeSandboxView: React.FC = () => {
     }
 
     const formData = new FormData();
+    formData.append("form_name", selectedPreset.name);
     formData.append("name", selectedPreset.name);
+    formData.append("form_dob", selectedPreset.dob);
+    formData.append("dob", selectedPreset.dob);
     formData.append("id_type", selectedPreset.idType);
     formData.append("id_number", selectedPreset.idNumber);
-    formData.append("dob", selectedPreset.dob);
-    formData.append("event_id", selectedPreset.eventId);
+    formData.append("event_id", "hackathon-2026");
+
+    // Provide a valid JPEG image file for FastAPI's id_image parameter
+    const canvas = document.createElement('canvas');
+    canvas.width = 400;
+    canvas.height = 250;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.fillStyle = '#090D16';
+      ctx.fillRect(0, 0, 400, 250);
+      ctx.fillStyle = '#38BDF8';
+      ctx.font = 'bold 16px sans-serif';
+      ctx.fillText(`${selectedPreset.idType.toUpperCase()}: ${selectedPreset.idNumber}`, 20, 50);
+      ctx.fillText(`NAME: ${selectedPreset.name}`, 20, 90);
+      ctx.fillText(`DOB: ${selectedPreset.dob}`, 20, 130);
+    }
+    const blob = await new Promise<Blob>((res) => canvas.toBlob((b) => res(b || new Blob()), 'image/jpeg'));
+    formData.append("id_image", new File([blob], `${selectedPreset.idType}_sample.jpg`, { type: 'image/jpeg' }));
 
     const res = await verificationService.verifySubmission(formData);
     setResult(res);

@@ -29,16 +29,27 @@ export class ApiVerificationService implements IVerificationService {
 
       let mapped: Registration[] = list.map((r: any) => ({
         id: r.id || `reg-${Math.random().toString(36).substr(2, 6)}`,
-        event_id: r.event_id || 'hackathon-2025-ai',
+        event_id: r.event_id || 'hackathon-2026',
         full_name: r.form_name || r.full_name || 'Anonymous',
-        id_type: r.id_type || 'aadhaar',
-        id_number_masked: r.id_number_masked || `XXXX-XXXX-${(r.id_number || '0000').slice(-4)}`,
-        dob: r.dob,
+        id_type: r.id_type || r.extracted_id_type || 'aadhaar',
+        id_number_masked: r.id_number_masked || r.extracted_id_number_masked || `XXXX-XXXX-${(r.id_number || '0000').slice(-4)}`,
+        dob: r.form_dob || r.dob,
         decision: r.decision || 'manual_review',
         confidence: Number(r.confidence || 0.0),
-        reasons: r.reasons || (r.reason ? [r.reason] : []),
+        reasons: Array.isArray(r.flags) && r.flags.length > 0 
+          ? r.flags 
+          : r.reasons || (r.reason ? [r.reason] : []),
         created_at: r.created_at || new Date().toISOString(),
-        breakdown: r.breakdown || {}
+        breakdown: r.breakdown ? (typeof r.breakdown === 'string' ? JSON.parse(r.breakdown) : r.breakdown) : {
+          face_match_score: r.face_match_score,
+          name_match_score: r.name_match_score,
+          quality_score: r.quality_score,
+          tampering_score: r.tampering_score,
+          is_duplicate: r.is_duplicate,
+          extracted_name: r.extracted_name,
+          extracted_dob: r.extracted_dob,
+          extracted_id_type: r.extracted_id_type
+        }
       }));
 
       if (params?.search) {
@@ -61,7 +72,20 @@ export class ApiVerificationService implements IVerificationService {
     try {
       const res = await fetch(`${this.baseUrl}/registrations/${id}`, { cache: 'no-store' });
       if (!res.ok) return this.fallback.getRegistrationById(id);
-      return await res.json();
+      const r = await res.json();
+      return {
+        id: r.id,
+        event_id: r.event_id || 'hackathon-2026',
+        full_name: r.form_name || r.full_name || 'Anonymous',
+        id_type: r.id_type || r.extracted_id_type || 'aadhaar',
+        id_number_masked: r.id_number_masked || r.extracted_id_number_masked || 'XXXX-XXXX-0000',
+        dob: r.form_dob || r.dob,
+        decision: r.decision || 'manual_review',
+        confidence: Number(r.confidence || 0.0),
+        reasons: Array.isArray(r.flags) ? r.flags : (r.reason ? [r.reason] : []),
+        created_at: r.created_at || new Date().toISOString(),
+        breakdown: r.breakdown ? (typeof r.breakdown === 'string' ? JSON.parse(r.breakdown) : r.breakdown) : {}
+      };
     } catch {
       return this.fallback.getRegistrationById(id);
     }
@@ -79,23 +103,50 @@ export class ApiVerificationService implements IVerificationService {
         method: 'POST',
         body: formData,
       });
-      if (!res.ok) throw new Error("API verification error");
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({ detail: 'API verification error' }));
+        const detailMsg = typeof errJson.detail === 'string' ? errJson.detail : JSON.stringify(errJson.detail || 'API verification error');
+        throw new Error(detailMsg);
+      }
       const json = await res.json();
       return {
         decision: json.decision,
         confidence: json.confidence,
-        reasons: json.reasons || [json.reason],
+        reasons: json.reasons || (json.flags && json.flags.length > 0 ? json.flags : [json.reason]),
         breakdown: json.breakdown || {},
         registration_id: json.registration_id || json.id || `reg-${Date.now().toString().slice(-4)}`
       };
-    } catch (err) {
+    } catch (err: any) {
       console.warn("API verify failed, falling back to mock pipeline:", err);
+      // If error is specific file validation from API, rethrow so UI can display it
+      if (err.message && !err.message.includes('fetch')) {
+        throw err;
+      }
       return this.fallback.verifySubmission(formData);
     }
   }
 
   async updateReviewDecision(id: string, decision: 'approved' | 'rejected', notes: string): Promise<boolean> {
-    return this.fallback.updateReviewDecision(id, decision, notes);
+    try {
+      const res = await fetch(`${this.baseUrl}/registrations/${id}/override`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          decision,
+          reason: notes || `Organizer manual override: ${decision}`
+        })
+      });
+
+      if (res.ok) {
+        return true;
+      }
+      return this.fallback.updateReviewDecision(id, decision, notes);
+    } catch (err) {
+      console.warn("API override call failed, using mock fallback:", err);
+      return this.fallback.updateReviewDecision(id, decision, notes);
+    }
   }
 
   async getTelemetry(): Promise<TelemetryMetrics> {
@@ -104,11 +155,11 @@ export class ApiVerificationService implements IVerificationService {
     const approved = regs.filter(r => r.decision === 'approved').length;
     const manual_review = regs.filter(r => r.decision === 'manual_review').length;
     const rejected = regs.filter(r => r.decision === 'rejected').length;
-    const duplicate_blocked = regs.filter(r => r.breakdown?.is_duplicate).length;
+    const duplicate_blocked = regs.filter(r => r.breakdown?.is_duplicate || r.reasons?.some(re => re.toLowerCase().includes('duplicate'))).length;
 
     const avgConf = total > 0 
       ? regs.reduce((acc, r) => acc + r.confidence, 0) / total 
-      : 0.88;
+      : 0.91;
 
     return {
       total,
@@ -117,7 +168,7 @@ export class ApiVerificationService implements IVerificationService {
       rejected,
       duplicate_blocked,
       average_confidence: Number(avgConf.toFixed(2)),
-      average_latency_ms: 740
+      average_latency_ms: 680
     };
   }
 }

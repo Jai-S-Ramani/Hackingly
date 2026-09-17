@@ -6,6 +6,7 @@ import { DecisionStatus } from '../../services/types';
 
 export interface BadgeProps {
   status?: DecisionStatus | 'duplicate' | 'sparkle' | 'neutral';
+  decision?: DecisionStatus;
   label?: string;
   size?: 'sm' | 'md';
   className?: string;
@@ -13,18 +14,20 @@ export interface BadgeProps {
 }
 
 export const Badge: React.FC<BadgeProps> = ({
-  status = 'neutral',
+  status,
+  decision,
   label,
   size = 'md',
   className = '',
   children
 }) => {
+  const effectiveStatus = decision || status || 'neutral';
   const sizeStyles = size === 'sm' ? "text-[11px] px-2 py-0.5 gap-1 font-medium" : "text-xs px-2.5 py-1 gap-1.5 font-medium";
 
   let styles = "bg-slate-100 text-slate-700 border-slate-200 dark:bg-white/5 dark:text-slate-300 dark:border-white/10";
   let icon = null;
 
-  switch (status) {
+  switch (effectiveStatus) {
     case 'approved':
       styles = "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30";
       icon = <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />;
@@ -52,7 +55,7 @@ export const Badge: React.FC<BadgeProps> = ({
       break;
   }
 
-  const displayText = label || (typeof children === 'string' ? children : status.replace('_', ' ').toUpperCase());
+  const displayText = label || (typeof children === 'string' ? children : effectiveStatus.replace('_', ' ').toUpperCase());
 
   return (
     <span className={`inline-flex items-center rounded-full border tracking-wide select-none ${sizeStyles} ${styles} ${className}`}>
