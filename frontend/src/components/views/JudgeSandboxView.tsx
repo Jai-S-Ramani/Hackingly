@@ -3,15 +3,8 @@
 import React, { useState } from 'react';
 import { 
   PlayCircle, 
-  Sparkles, 
   Terminal, 
-  CheckCircle2, 
-  AlertTriangle, 
-  XCircle, 
-  ShieldCheck, 
-  Cpu,
-  Layers,
-  ArrowRight
+  Cpu
 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { mockJudgePresets } from '../../services/mockData';
@@ -46,7 +39,6 @@ export const JudgeSandboxView: React.FC = () => {
       setLogs(prev => [...prev, steps[i]]);
     }
 
-    // Call service with form data
     const formData = new FormData();
     formData.append("name", selectedPreset.name);
     formData.append("id_type", selectedPreset.idType);
@@ -66,14 +58,14 @@ export const JudgeSandboxView: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-2xl font-bold text-white tracking-tight">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
               Judge Interactive Sandbox
             </h2>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-medium">
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 font-semibold">
               Live Stage Demo
             </span>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Test autonomous pipeline execution in real-time with 1-click forensic scenarios.
           </p>
         </div>
@@ -101,39 +93,41 @@ export const JudgeSandboxView: React.FC = () => {
                 setResult(null);
                 setLogs([]);
               }}
-              className={`p-3.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
+              className={`p-3.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between shadow-sm dark:shadow-none ${
                 isSelected
-                  ? 'bg-slate-800/90 border-indigo-500/50 shadow-lg shadow-indigo-500/10'
-                  : 'bg-slate-900/60 border-white/8 hover:border-white/20 hover:bg-slate-900/90'
+                  ? 'bg-indigo-50/80 dark:bg-slate-800/90 border-indigo-500/60 shadow-md shadow-indigo-500/10'
+                  : 'bg-white dark:bg-slate-900/60 border-slate-200 dark:border-white/8 hover:border-slate-300 dark:hover:border-white/20 hover:bg-slate-50 dark:hover:bg-slate-900/90'
               }`}
             >
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <span className={`text-[10px] font-mono px-2 py-0.5 rounded uppercase font-semibold ${
-                    preset.expectedVerdict === 'approved' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'
+                    preset.expectedVerdict === 'approved' 
+                      ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-transparent' 
+                      : 'bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400 border border-rose-200 dark:border-transparent'
                   }`}>
                     {preset.expectedVerdict}
                   </span>
-                  <span className="text-[10px] text-slate-500 uppercase">{preset.category}</span>
+                  <span className="text-[10px] text-slate-500 uppercase font-semibold">{preset.category}</span>
                 </div>
-                <h3 className="text-sm font-semibold text-white tracking-tight">{preset.title.split(':')[1]}</h3>
-                <p className="text-[11px] text-slate-400 mt-1 line-clamp-2">{preset.subtitle}</p>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white tracking-tight">{preset.title.split(':')[1]}</h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">{preset.subtitle}</p>
               </div>
 
-              <div className="mt-3 pt-2 border-t border-white/5 flex items-center justify-between text-[11px] text-slate-400 font-mono">
-                <span>{preset.name}</span>
-                <span>{preset.idType.toUpperCase()}</span>
+              <div className="mt-3 pt-2 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400 font-mono">
+                <span className="font-semibold">{preset.name}</span>
+                <span className="text-slate-500">{preset.idType.toUpperCase()}</span>
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* Main Execution Arena: Left Trace Terminal, Right Verdict */}
+      {/* Main Execution Arena */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        {/* Terminal Execution Stream (7 cols) */}
+        {/* Terminal Stream (7 cols) */}
         <div className="lg:col-span-7">
-          <Card className="p-4 bg-slate-950 border-white/10 font-mono text-xs flex flex-col h-80">
+          <Card className="p-4 bg-slate-950 border-slate-800 dark:border-white/10 font-mono text-xs flex flex-col h-80 shadow-lg">
             <div className="flex items-center justify-between pb-3 border-b border-white/8 mb-3 text-slate-400">
               <div className="flex items-center gap-2">
                 <Terminal className="w-4 h-4 text-indigo-400" />
@@ -164,9 +158,9 @@ export const JudgeSandboxView: React.FC = () => {
 
         {/* Live Verdict & Breakdown Card (5 cols) */}
         <div className="lg:col-span-5">
-          <Card className="p-5 h-80 flex flex-col justify-between border-white/10">
+          <Card className="p-5 h-80 flex flex-col justify-between border-slate-200 dark:border-white/10 shadow-sm dark:shadow-none">
             <div>
-              <span className="text-[11px] text-slate-400 uppercase tracking-wider block font-semibold">
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-wider block font-semibold">
                 Autonomous Verification Verdict
               </span>
 
@@ -174,40 +168,40 @@ export const JudgeSandboxView: React.FC = () => {
                 <div className="mt-4 space-y-3 animate-in zoom-in-95 duration-200">
                   <div className="flex items-center justify-between">
                     <Badge status={result.decision} size="md" />
-                    <span className="text-2xl font-bold font-mono text-white">
+                    <span className="text-2xl font-bold font-mono text-slate-900 dark:text-white">
                       {Math.round(result.confidence * 100)}%
                     </span>
                   </div>
 
-                  <div className="space-y-1 text-xs text-slate-300 pt-2 border-t border-white/8">
-                    <span className="text-[10px] text-slate-500 uppercase tracking-wider block">Decision Rationale</span>
-                    <p className="text-slate-200 leading-relaxed font-medium">
+                  <div className="space-y-1 text-xs pt-2 border-t border-slate-100 dark:border-white/8">
+                    <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-semibold">Decision Rationale</span>
+                    <p className="text-slate-800 dark:text-slate-200 leading-relaxed font-medium">
                       {result.reasons?.[0] || "All checks satisfied."}
                     </p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 pt-2 text-[11px] font-mono">
-                    <div className="p-2 rounded-lg bg-white/5 border border-white/5">
+                    <div className="p-2 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5">
                       <span className="text-slate-500 block text-[10px]">VERHOEFF</span>
-                      <span className="text-emerald-400 font-semibold">VALID</span>
+                      <span className="text-emerald-600 dark:text-emerald-400 font-semibold">VALID</span>
                     </div>
-                    <div className="p-2 rounded-lg bg-white/5 border border-white/5">
+                    <div className="p-2 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5">
                       <span className="text-slate-500 block text-[10px]">ARCFACE</span>
-                      <span className={result.decision === 'approved' ? 'text-emerald-400' : 'text-rose-400'}>
+                      <span className={result.decision === 'approved' ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-rose-600 dark:text-rose-400 font-semibold'}>
                         {result.decision === 'approved' ? '94.8% MATCH' : 'MISMATCH'}
                       </span>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="mt-12 text-center space-y-2 text-slate-500">
-                  <Cpu className="w-8 h-8 mx-auto text-slate-600 animate-bounce" />
+                <div className="mt-12 text-center space-y-2 text-slate-400 dark:text-slate-500">
+                  <Cpu className="w-8 h-8 mx-auto text-slate-400 dark:text-slate-600 animate-bounce" />
                   <p className="text-xs">Click "Run Autonomous Verification" to execute live demo pipeline.</p>
                 </div>
               )}
             </div>
 
-            <div className="pt-3 border-t border-white/8">
+            <div className="pt-3 border-t border-slate-100 dark:border-white/8">
               <Button
                 variant="outline"
                 size="sm"

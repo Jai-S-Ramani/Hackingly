@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { Paperclip, ArrowUp, Sparkles, Image as ImageIcon } from 'lucide-react';
+import { Paperclip, ArrowUp, Sparkles } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 
 export const PromptBar: React.FC = () => {
@@ -31,7 +31,7 @@ export const PromptBar: React.FC = () => {
     <div className="sticky bottom-4 z-30 max-w-2xl mx-auto px-4 w-full select-none">
       <form 
         onSubmit={handleSubmit}
-        className="relative flex items-center rounded-2xl bg-slate-900/90 border border-white/12 shadow-2xl backdrop-blur-xl p-1.5 transition-all focus-within:border-indigo-500/50 focus-within:ring-2 focus-within:ring-indigo-500/20"
+        className="relative flex items-center rounded-2xl bg-white/95 dark:bg-slate-900/90 border border-slate-300 dark:border-white/12 shadow-xl shadow-slate-900/5 dark:shadow-2xl backdrop-blur-xl p-1.5 transition-all focus-within:border-indigo-500/50 focus-within:ring-2 focus-within:ring-indigo-500/20"
       >
         {/* Hidden File Input */}
         <input 
@@ -47,7 +47,7 @@ export const PromptBar: React.FC = () => {
           type="button"
           onClick={() => fileInputRef.current?.click()}
           aria-label="Upload document image"
-          className="p-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+          className="p-2.5 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/5 transition-colors cursor-pointer"
         >
           <Paperclip className="w-4 h-4" />
         </button>
@@ -58,10 +58,10 @@ export const PromptBar: React.FC = () => {
           value={inputVal}
           onChange={(e) => setInputVal(e.target.value)}
           placeholder="Upload ID image or type command (e.g. 'sandbox', 'verify', 'review')..."
-          className="flex-1 bg-transparent px-2 text-sm text-white placeholder:text-slate-500 focus:outline-none"
+          className="flex-1 bg-transparent px-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none"
         />
 
-        {/* Submit Arrow Up Button (Confluence style) */}
+        {/* Submit Arrow Up Button */}
         <button
           type="submit"
           aria-label="Submit verification prompt"
@@ -69,7 +69,7 @@ export const PromptBar: React.FC = () => {
           className={`p-2 rounded-xl transition-all cursor-pointer ${
             inputVal.trim()
               ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/30'
-              : 'text-slate-500 hover:text-slate-400 hover:bg-white/5'
+              : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5'
           }`}
         >
           <ArrowUp className="w-4 h-4" />
@@ -79,10 +79,10 @@ export const PromptBar: React.FC = () => {
       {/* Subtle Bottom Helper Caption */}
       <div className="flex items-center justify-between text-[11px] text-slate-500 px-2 mt-1.5">
         <span className="flex items-center gap-1">
-          <Sparkles className="w-3 h-3 text-emerald-400" />
+          <Sparkles className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
           <span>AI Biometric & Duplicate Fraud Engine Active</span>
         </span>
-        <span>Press <kbd className="font-mono text-slate-400">⌘K</kbd> for commands</span>
+        <span>Press <kbd className="font-mono text-slate-600 dark:text-slate-400 font-semibold">⌘K</kbd> for commands</span>
       </div>
     </div>
   );

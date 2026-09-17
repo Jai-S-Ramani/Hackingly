@@ -12,24 +12,27 @@ import { RulesAnalyticsView } from '../components/views/RulesAnalyticsView';
 import { ForensicModal } from '../components/views/ForensicModal';
 import { CommandPalette } from '../components/ui/CommandPalette';
 import { useAppStore } from '../store/useAppStore';
+import { useThemeStore } from '../store/useThemeStore';
 
 export default function Home() {
   const { activeTab, fetchRegistrations, fetchTelemetry } = useAppStore();
+  const { initTheme } = useThemeStore();
 
   useEffect(() => {
+    initTheme();
     fetchRegistrations();
     fetchTelemetry();
-  }, [fetchRegistrations, fetchTelemetry]);
+  }, [initTheme, fetchRegistrations, fetchTelemetry]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#090D16] text-slate-100 selection:bg-indigo-500/30 selection:text-indigo-200">
+    <div className="min-h-screen flex flex-col bg-[var(--bg-canvas)] text-[var(--text-primary)] transition-colors duration-200 selection:bg-indigo-500/30 selection:text-indigo-200">
       {/* Background Ambient Radial Auras (Confluence Mesh Spec) */}
       <div 
-        className="fixed inset-0 pointer-events-none z-0"
+        className="fixed inset-0 pointer-events-none z-0 transition-opacity duration-300"
         style={{
           backgroundImage: `
-            radial-gradient(ellipse at 15% 0%, rgba(99, 102, 241, 0.12) 0%, transparent 55%),
-            radial-gradient(ellipse at 85% 0%, rgba(16, 185, 129, 0.10) 0%, transparent 55%)
+            radial-gradient(ellipse at 15% 0%, var(--mesh-indigo) 0%, transparent 55%),
+            radial-gradient(ellipse at 85% 0%, var(--mesh-emerald) 0%, transparent 55%)
           `
         }}
       />
@@ -39,7 +42,7 @@ export default function Home() {
 
       {/* Main Workspace Frame: Sidebar + Content */}
       <div className="flex-1 flex w-full relative z-10 overflow-hidden">
-        {/* Obsidian Sidebar */}
+        {/* Obsidian/Slate Sidebar */}
         <Sidebar />
 
         {/* Scrollable Center Canvas */}

@@ -2,16 +2,13 @@
 
 import React, { useState } from 'react';
 import { 
-  UploadCloud, 
   Camera, 
   CheckCircle2, 
   AlertCircle, 
-  ShieldCheck, 
   User, 
   CreditCard, 
   Calendar,
-  FileText,
-  ArrowRight
+  FileText
 } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
@@ -19,7 +16,6 @@ import { Badge } from '../ui/Badge';
 import { verificationService } from '../../services';
 import { useAppStore } from '../../store/useAppStore';
 
-// UIDAI Verhoeff algorithm for client-side instant Aadhaar validation
 function validateVerhoeff(str: string): boolean {
   const d = [
     [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
@@ -112,40 +108,40 @@ export const ApplicantPortalView: React.FC = () => {
     <div className="max-w-3xl mx-auto px-4 py-8 space-y-6 select-none animate-in fade-in duration-200">
       {/* Title */}
       <div className="text-center space-y-2">
-        <h2 className="text-3xl font-extrabold text-white tracking-tight">
+        <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
           Applicant Identity Verification
         </h2>
-        <p className="text-xs text-slate-400 max-w-lg mx-auto">
+        <p className="text-xs text-slate-500 dark:text-slate-400 max-w-lg mx-auto">
           AI Build Challenge Bengaluru · Secure eligibility check with instant autonomous biometric and duplicate detection.
         </p>
       </div>
 
       {submissionResult ? (
-        <Card className="p-6 text-center space-y-5 border-white/10 animate-in zoom-in-95 duration-200">
+        <Card className="p-6 text-center space-y-5 border-slate-200 dark:border-white/10 shadow-lg dark:shadow-none animate-in zoom-in-95 duration-200">
           <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mx-auto">
             {submissionResult.decision === 'approved' ? (
-              <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+              <CheckCircle2 className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
             ) : submissionResult.decision === 'manual_review' ? (
-              <AlertCircle className="w-8 h-8 text-amber-400" />
+              <AlertCircle className="w-8 h-8 text-amber-600 dark:text-amber-400" />
             ) : (
-              <AlertCircle className="w-8 h-8 text-rose-400" />
+              <AlertCircle className="w-8 h-8 text-rose-600 dark:text-rose-400" />
             )}
           </div>
 
           <div className="space-y-1">
             <Badge status={submissionResult.decision} size="md" />
-            <h3 className="text-xl font-bold text-white mt-2">
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white mt-2">
               {submissionResult.decision === 'approved' ? 'Identity Verified & Approved!' :
                submissionResult.decision === 'manual_review' ? 'Submission Sent to Manual Review' : 'Verification Rejected'}
             </h3>
-            <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+            <p className="text-xs text-slate-600 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
               {submissionResult.reasons?.[0] || "Eligibility validated."}
             </p>
           </div>
 
-          <div className="p-3 rounded-xl bg-slate-950 border border-white/5 max-w-sm mx-auto text-xs font-mono text-slate-400 flex items-center justify-between">
+          <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-white/5 max-w-sm mx-auto text-xs font-mono text-slate-600 dark:text-slate-400 flex items-center justify-between">
             <span>REGISTRATION CODE</span>
-            <span className="text-indigo-400 font-bold">{submissionResult.registration_id}</span>
+            <span className="text-indigo-600 dark:text-indigo-400 font-bold">{submissionResult.registration_id}</span>
           </div>
 
           <div className="flex justify-center gap-3 pt-2">
@@ -158,12 +154,12 @@ export const ApplicantPortalView: React.FC = () => {
           </div>
         </Card>
       ) : (
-        <Card className="p-6 border-white/10">
+        <Card className="p-6 border-slate-200 dark:border-white/10 shadow-sm dark:shadow-none">
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Full Name Field */}
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-300 flex items-center gap-1.5">
-                <User className="w-3.5 h-3.5 text-indigo-400" />
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <User className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                 <span>Full Name (As printed on ID)</span>
               </label>
               <input
@@ -171,15 +167,15 @@ export const ApplicantPortalView: React.FC = () => {
                 required
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-950/60 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-indigo-500/50"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950/60 border border-slate-300 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
               />
             </div>
 
             {/* ID Type & Number */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-slate-300 flex items-center gap-1.5">
-                  <CreditCard className="w-3.5 h-3.5 text-indigo-400" />
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <CreditCard className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                   <span>Document Type</span>
                 </label>
                 <select
@@ -188,7 +184,7 @@ export const ApplicantPortalView: React.FC = () => {
                     setIdType(e.target.value as any);
                     setIsVerhoeffValid(null);
                   }}
-                  className="w-full px-3 py-2 bg-slate-950 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-indigo-500/50"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
                 >
                   <option value="aadhaar">Aadhaar Card (12 Digits)</option>
                   <option value="pan">PAN Card (10 Chars)</option>
@@ -197,10 +193,10 @@ export const ApplicantPortalView: React.FC = () => {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-slate-300 flex items-center justify-between">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center justify-between">
                   <span>Document / ID Number</span>
                   {idType === 'aadhaar' && isVerhoeffValid !== null && (
-                    <span className={`text-[10px] font-mono ${isVerhoeffValid ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    <span className={`text-[10px] font-mono font-bold ${isVerhoeffValid ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                       {isVerhoeffValid ? '✓ Verhoeff Valid' : '✗ Checksum Invalid'}
                     </span>
                   )}
@@ -212,8 +208,8 @@ export const ApplicantPortalView: React.FC = () => {
                   onChange={(e) => setIdNumber(e.target.value)}
                   onBlur={handleIdNumberBlur}
                   placeholder={idType === 'aadhaar' ? "453289012345" : "ABCDE1234F"}
-                  className={`w-full px-3 py-2 bg-slate-950/60 border rounded-lg text-sm text-white font-mono focus:outline-none ${
-                    isVerhoeffValid === false ? 'border-rose-500/50' : 'border-white/10 focus:border-indigo-500/50'
+                  className={`w-full px-3 py-2 bg-slate-50 dark:bg-slate-950/60 border rounded-lg text-sm text-slate-900 dark:text-white font-mono focus:outline-none ${
+                    isVerhoeffValid === false ? 'border-rose-500' : 'border-slate-300 dark:border-white/10 focus:border-indigo-500'
                   }`}
                 />
               </div>
@@ -221,8 +217,8 @@ export const ApplicantPortalView: React.FC = () => {
 
             {/* Date of Birth */}
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-300 flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                 <span>Date of Birth</span>
               </label>
               <input
@@ -230,7 +226,7 @@ export const ApplicantPortalView: React.FC = () => {
                 required
                 value={dob}
                 onChange={(e) => setDob(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-950/60 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-indigo-500/50"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950/60 border border-slate-300 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
               />
             </div>
 
@@ -239,7 +235,7 @@ export const ApplicantPortalView: React.FC = () => {
               {/* ID Document Box */}
               <div 
                 onClick={() => document.getElementById('id_upload')?.click()}
-                className="p-4 rounded-xl border border-dashed border-white/15 hover:border-indigo-500/50 bg-slate-950/40 hover:bg-slate-950/80 transition-all cursor-pointer text-center space-y-2 group"
+                className="p-4 rounded-xl border border-dashed border-slate-300 hover:border-indigo-500 dark:border-white/15 dark:hover:border-indigo-500/50 bg-slate-50/70 hover:bg-slate-100 dark:bg-slate-950/40 dark:hover:bg-slate-950/80 transition-all cursor-pointer text-center space-y-2 group"
               >
                 <input
                   type="file"
@@ -248,11 +244,11 @@ export const ApplicantPortalView: React.FC = () => {
                   accept="image/*"
                   onChange={(e) => setIdFile(e.target.files?.[0] || null)}
                 />
-                <div className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center mx-auto text-slate-400 group-hover:text-indigo-400">
+                <div className="w-9 h-9 rounded-xl bg-slate-200 dark:bg-white/5 flex items-center justify-center mx-auto text-slate-600 dark:text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
                   <FileText className="w-5 h-5" />
                 </div>
                 <div>
-                  <span className="text-xs font-medium text-slate-200 block">
+                  <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 block">
                     {idFile ? idFile.name : "Upload ID Document"}
                   </span>
                   <span className="text-[10px] text-slate-500">Aadhaar, PAN, College ID (PNG, JPG)</span>
@@ -262,7 +258,7 @@ export const ApplicantPortalView: React.FC = () => {
               {/* Live Selfie Box */}
               <div 
                 onClick={() => document.getElementById('selfie_upload')?.click()}
-                className="p-4 rounded-xl border border-dashed border-white/15 hover:border-emerald-500/50 bg-slate-950/40 hover:bg-slate-950/80 transition-all cursor-pointer text-center space-y-2 group"
+                className="p-4 rounded-xl border border-dashed border-slate-300 hover:border-emerald-500 dark:border-white/15 dark:hover:border-emerald-500/50 bg-slate-50/70 hover:bg-slate-100 dark:bg-slate-950/40 dark:hover:bg-slate-950/80 transition-all cursor-pointer text-center space-y-2 group"
               >
                 <input
                   type="file"
@@ -271,11 +267,11 @@ export const ApplicantPortalView: React.FC = () => {
                   accept="image/*"
                   onChange={(e) => setSelfieFile(e.target.files?.[0] || null)}
                 />
-                <div className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center mx-auto text-slate-400 group-hover:text-emerald-400">
+                <div className="w-9 h-9 rounded-xl bg-slate-200 dark:bg-white/5 flex items-center justify-center mx-auto text-slate-600 dark:text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
                   <Camera className="w-5 h-5" />
                 </div>
                 <div>
-                  <span className="text-xs font-medium text-slate-200 block">
+                  <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 block">
                     {selfieFile ? selfieFile.name : "Upload / Capture Selfie"}
                   </span>
                   <span className="text-[10px] text-slate-500">Live facial photo for biometric match</span>
@@ -283,14 +279,14 @@ export const ApplicantPortalView: React.FC = () => {
               </div>
             </div>
 
-            {/* Stepper Progress Bar while submitting */}
+            {/* Stepper Progress Bar */}
             {isSubmitting && (
-              <div className="p-3 rounded-xl bg-slate-950 border border-white/10 space-y-2 animate-in fade-in">
-                <div className="flex items-center justify-between text-xs text-indigo-400 font-medium">
+              <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-white/10 space-y-2 animate-in fade-in">
+                <div className="flex items-center justify-between text-xs text-indigo-600 dark:text-indigo-400 font-semibold">
                   <span>Executing Pipeline Step {currentStep} of 5</span>
                   <span className="font-mono">{currentStep * 20}%</span>
                 </div>
-                <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
+                <div className="w-full bg-slate-200 dark:bg-white/5 rounded-full h-1.5 overflow-hidden">
                   <div 
                     className="bg-gradient-to-r from-indigo-500 to-emerald-400 h-full transition-all duration-200"
                     style={{ width: `${currentStep * 20}%` }}

@@ -1,18 +1,43 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #090D16;
-  --foreground: #F8FAFC;
+  --bg-canvas: #F8FAFC;
+  --bg-sidebar: #F1F5F9;
+  --bg-card: #FFFFFF;
+  --bg-elevated: #FFFFFF;
+  --border-subtle: #E2E8F0;
+  --border-hover: #CBD5E1;
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #64748B;
+  --mesh-indigo: rgba(99, 102, 241, 0.08);
+  --mesh-emerald: rgba(16, 185, 129, 0.06);
+  --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.25);
 }
 
-html.light {
-  --background: #F8FAFC;
-  --foreground: #0F172A;
+.dark {
+  --bg-canvas: #090D16;
+  --bg-sidebar: #070B12;
+  --bg-card: #0F172A;
+  --bg-elevated: #1E293B;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.18);
+  --text-primary: #FFFFFF;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+  --mesh-indigo: rgba(99, 102, 241, 0.14);
+  --mesh-emerald: rgba(16, 185, 129, 0.10);
+  --scrollbar-thumb: rgba(255, 255, 255, 0.12);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.22);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background-color: var(--bg-canvas);
+  color: var(--text-primary);
+  transition: background-color 200ms cubic-bezier(0.4, 0, 0.2, 1), color 200ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Custom Sleek Scrollbars */
@@ -26,10 +51,10 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--scrollbar-thumb);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.22);
+  background: var(--scrollbar-thumb-hover);
 }
