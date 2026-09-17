@@ -30,7 +30,9 @@ decision:
   review_threshold: 0.50
 
 database:
-  db_path: "data/verifyai.db"
+  provider: "supabase"
+  supabase_url: "https://ejchzurnyvzhqcsqmbrl.supabase.co"
+  supabase_key: "sb_publishable_Gpbr08o4g-iXHyqHTxumlg_uX0HfV5L"
 
 server:
   host: "0.0.0.0"

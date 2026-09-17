@@ -475,6 +475,13 @@ def register_id_hash(id_hash: str, id_type: str, id_number_masked: str, registra
     client = get_supabase_client()
     if client:
         try:
+            # Ensure parent registration exists to satisfy foreign key reference
+            client.table("registrations").upsert({
+                "id": registration_id,
+                "form_name": registrant_name,
+                "event_id": event_id or "hackathon-2026"
+            }).execute()
+
             client.table("id_hashes").upsert({
                 "hash": id_hash,
                 "id_type": id_type,
@@ -483,7 +490,7 @@ def register_id_hash(id_hash: str, id_type: str, id_number_masked: str, registra
                 "registration_id": registration_id,
                 "event_id": event_id
             }).execute()
-        except Exception:
+        except Exception as e:
             pass
 
     conn = get_connection()

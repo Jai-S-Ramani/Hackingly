@@ -551,109 +551,106 @@ def seed_database():
 
     conn.commit()
     conn.close()
-    print(f"[SUCCESS] Successfully seeded {len(records)} realistic hackathon registrations into {DB_PATH}")
 
-    # Seed into Supabase if requested or configured
-    import sys
-    if "--supabase" in sys.argv or "--cloud" in sys.argv:
-        from app.database import get_supabase_client
-        client = get_supabase_client()
-        if not client:
-            print("[ERROR] Supabase client could not be initialized. Check SUPABASE_URL and SUPABASE_KEY in .env")
-            return
-        
-        print("[INFO] Seeding demo registrations into Supabase...")
-        try:
-            # 1. Upsert Event
-            client.table("events").upsert({
-                "id": "hackathon-2026",
-                "name": "AI Build Challenge Bengaluru 2026",
-                "min_age": 18,
-                "student_only": False,
-                "allowed_id_types": ["aadhaar", "pan", "college_id", "voter_id"]
+    # Seed into Supabase by default
+    from app.database import get_supabase_client
+    client = get_supabase_client()
+    if not client:
+        print("[WARN] Supabase client could not be initialized. Check SUPABASE_URL and SUPABASE_KEY in .env")
+        return
+    
+    print("[INFO] Seeding demo registrations directly into Supabase Cloud...")
+    try:
+        # 1. Upsert Event
+        client.table("events").upsert({
+            "id": "hackathon-2026",
+            "name": "AI Build Challenge Bengaluru 2026",
+            "min_age": 18,
+            "student_only": False,
+            "allowed_id_types": ["aadhaar", "pan", "college_id", "voter_id"]
+        }).execute()
+
+        for item in records:
+            time_stamp = (now - timedelta(minutes=item["min_ago"])).isoformat()
+            
+            # Registration
+            client.table("registrations").upsert({
+                "id": item["reg_id"],
+                "event_id": "hackathon-2026",
+                "form_name": item["name"],
+                "form_email": item["email"],
+                "form_dob": item["dob"]
             }).execute()
 
-            for item in records:
-                time_stamp = (now - timedelta(minutes=item["min_ago"])).isoformat()
-                
-                # Registration
-                client.table("registrations").upsert({
-                    "id": item["reg_id"],
-                    "event_id": "hackathon-2026",
-                    "form_name": item["name"],
-                    "form_email": item["email"],
-                    "form_dob": item["dob"]
-                }).execute()
-
-                # Breakdown
-                bd = {
-                    "quality": {
-                        "score": item["quality_score"],
-                        "blur_score": 240.0 if "blurry_image" not in item["flags"] else 38.0,
-                        "tampering_score": item["tampering_score"],
-                        "resolution_ok": True,
-                        "detected_doc_type": item["id_type"]
-                    },
-                    "extraction": {
-                        "score": 0.90,
-                        "name": item["extracted_name"],
-                        "date_of_birth": item["dob"],
-                        "id_number_masked": item["id_masked"],
-                        "id_type": item["id_type"],
-                        "format_valid": True,
-                        "checksum_valid": True
-                    },
-                    "identity": {
-                        "face_match_score": item["face_score"],
-                        "face_match_verdict": "match" if item["face_score"] and item["face_score"] > 0.6 else "mismatch",
-                        "name_match_score": item["name_score"],
-                        "name_match_verdict": "match" if item["name_score"] >= 85 else ("uncertain" if item["name_score"] >= 65 else "mismatch")
-                    },
-                    "duplicate": {
-                        "is_duplicate": item["is_dup"],
-                        "details": item["reason"] if item["is_dup"] else "No duplicates found. First-time registration."
-                    },
-                    "eligibility": {
-                        "age_check": "fail" if "underage" in str(item["flags"]) else "pass",
-                        "student_check": "pass"
-                    }
-                }
-
-                # Verification
-                client.table("verifications").upsert({
-                    "id": f"ver_{item['reg_id']}",
-                    "registration_id": item["reg_id"],
-                    "decision": item["decision"],
-                    "confidence": item["confidence"],
-                    "reason": item["reason"],
-                    "flags": item["flags"],
-                    "breakdown": bd,
-                    "extracted_name": item["extracted_name"],
-                    "extracted_dob": item["dob"],
-                    "extracted_id_number_masked": item["id_masked"],
-                    "extracted_id_type": item["id_type"],
-                    "face_match_score": item["face_score"],
-                    "name_match_score": item["name_score"],
-                    "quality_score": item["quality_score"],
+            # Breakdown
+            bd = {
+                "quality": {
+                    "score": item["quality_score"],
+                    "blur_score": 240.0 if "blurry_image" not in item["flags"] else 38.0,
                     "tampering_score": item["tampering_score"],
-                    "is_duplicate": bool(item["is_dup"])
-                }).execute()
-
-                # ID Hash
-                id_hash = hashlib.sha256(f"{item['id_type']}:{item['id_num_clean']}".encode("utf-8")).hexdigest()
-                client.table("id_hashes").upsert({
-                    "hash": id_hash,
-                    "id_type": item["id_type"],
+                    "resolution_ok": True,
+                    "detected_doc_type": item["id_type"]
+                },
+                "extraction": {
+                    "score": 0.90,
+                    "name": item["extracted_name"],
+                    "date_of_birth": item["dob"],
                     "id_number_masked": item["id_masked"],
-                    "registrant_name": item["name"],
-                    "registration_id": item["reg_id"],
-                    "event_id": "hackathon-2026"
-                }).execute()
+                    "id_type": item["id_type"],
+                    "format_valid": True,
+                    "checksum_valid": True
+                },
+                "identity": {
+                    "face_match_score": item["face_score"],
+                    "face_match_verdict": "match" if item["face_score"] and item["face_score"] > 0.6 else "mismatch",
+                    "name_match_score": item["name_score"],
+                    "name_match_verdict": "match" if item["name_score"] >= 85 else ("uncertain" if item["name_score"] >= 65 else "mismatch")
+                },
+                "duplicate": {
+                    "is_duplicate": item["is_dup"],
+                    "details": item["reason"] if item["is_dup"] else "No duplicates found. First-time registration."
+                },
+                "eligibility": {
+                    "age_check": "fail" if "underage" in str(item["flags"]) else "pass",
+                    "student_check": "pass"
+                }
+            }
 
-            print(f"[SUCCESS] Successfully seeded {len(records)} registrations directly into Supabase cloud!")
-        except Exception as e:
-            print(f"[ERROR] Failed to seed into Supabase: {e}")
-            print("Note: Ensure the SQL schema migration in docs/supabase_schema.sql has been executed in the Supabase Dashboard SQL Editor.")
+            # Verification
+            client.table("verifications").upsert({
+                "id": f"ver_{item['reg_id']}",
+                "registration_id": item["reg_id"],
+                "decision": item["decision"],
+                "confidence": item["confidence"],
+                "reason": item["reason"],
+                "flags": item["flags"],
+                "breakdown": bd,
+                "extracted_name": item["extracted_name"],
+                "extracted_dob": item["dob"],
+                "extracted_id_number_masked": item["id_masked"],
+                "extracted_id_type": item["id_type"],
+                "face_match_score": item["face_score"],
+                "name_match_score": item["name_score"],
+                "quality_score": item["quality_score"],
+                "tampering_score": item["tampering_score"],
+                "is_duplicate": bool(item["is_dup"])
+            }).execute()
+
+            # ID Hash
+            id_hash = hashlib.sha256(f"{item['id_type']}:{item['id_num_clean']}".encode("utf-8")).hexdigest()
+            client.table("id_hashes").upsert({
+                "hash": id_hash,
+                "id_type": item["id_type"],
+                "id_number_masked": item["id_masked"],
+                "registrant_name": item["name"],
+                "registration_id": item["reg_id"],
+                "event_id": "hackathon-2026"
+            }).execute()
+
+        print(f"[SUCCESS] Successfully seeded {len(records)} registrations directly into Supabase cloud!")
+    except Exception as e:
+        print(f"[ERROR] Failed to seed into Supabase: {e}")
+        print("Note: Ensure the SQL schema migration in docs/supabase_schema.sql has been executed in the Supabase Dashboard SQL Editor.")
 
 if __name__ == "__main__":
     seed_database()

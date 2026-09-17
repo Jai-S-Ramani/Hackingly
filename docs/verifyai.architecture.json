@@ -14,8 +14,8 @@
       {
         "id": "persistence-delivery",
         "label": "Persistence and organizer delivery",
-        "focus": ["decision", "supabase", "sqlite", "organizer"],
-        "note": "Dual-mode cloud persistence (Supabase PostgreSQL) with local SQLite fallback and organizer dashboard."
+        "focus": ["decision", "supabase", "organizer"],
+        "note": "Supabase PostgreSQL cloud persistence with real-time audit records and organizer review."
       }
     ]
   },
@@ -92,15 +92,6 @@
       "size": [150, 60]
     },
     {
-      "id": "sqlite",
-      "type": "database",
-      "label": "SQLite Local",
-      "sublabel": "Offline Fallback",
-      "brand": "sqlite",
-      "pos": [710, 420],
-      "size": [150, 60]
-    },
-    {
       "id": "organizer",
       "type": "frontend",
       "label": "Organizer UI",
@@ -113,7 +104,7 @@
     {
       "kind": "region",
       "label": "VerifyAI Automated Verification Platform Runtime",
-      "wraps": ["api", "forensics", "ocr_engine", "biometrics", "duplicates", "decision", "supabase", "sqlite"]
+      "wraps": ["api", "forensics", "ocr_engine", "biometrics", "duplicates", "decision", "supabase"]
     }
   ],
   "connections": [
@@ -168,18 +159,9 @@
       "id": "decision-to-supabase",
       "from": "decision",
       "to": "supabase",
-      "label": "cloud sync",
-      "variant": "dashed",
+      "label": "persist & hash",
+      "variant": "emphasis",
       "labelDy": 24
-    },
-    {
-      "id": "supabase-to-sqlite",
-      "from": "supabase",
-      "to": "sqlite",
-      "label": "offline mirror",
-      "variant": "dashed",
-      "fromSide": "left",
-      "toSide": "right"
     },
     {
       "id": "decision-to-organizer",
@@ -210,10 +192,10 @@
     },
     {
       "dot": "violet",
-      "title": "Decision & Dual-Mode Persistence",
+      "title": "Decision & Supabase Cloud",
       "items": [
         "Stage 5 computes weighted confidence scores and enforces event eligibility rules",
-        "Dual-mode database adapter writes directly to Supabase cloud with resilient SQLite offline fallback",
+        "Supabase cloud PostgreSQL stores all participant registrations, audit trails, and SHA-256 hashes",
         "Streamlit dashboard provides live review, ELA heatmaps, face audit, and manual overrides"
       ]
     }
