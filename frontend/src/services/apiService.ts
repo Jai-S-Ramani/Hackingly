@@ -24,7 +24,8 @@ export class ApiVerificationService implements IVerificationService {
 
       const res = await fetch(`${this.baseUrl}/registrations?${query.toString()}`, { cache: 'no-store' });
       if (!res.ok) throw new Error("Failed to fetch registrations");
-      const list = await res.json();
+      const raw = await res.json();
+      const list = Array.isArray(raw) ? raw : (raw.registrations || []);
 
       let mapped: Registration[] = list.map((r: any) => ({
         id: r.id || `reg-${Math.random().toString(36).substr(2, 6)}`,
