@@ -1,0 +1,37 @@
+ocr:
+  engine: "easyocr" # easyocr | paddleocr | textract
+  languages: ["en", "hi"]
+  confidence_threshold: 0.50
+
+quality:
+  blur_threshold: 100.0 # Laplacian variance under 100 is considered blurry
+  min_width: 300
+  min_height: 400
+  ela_threshold: 15.0 # Max average difference in ELA to consider suspicious
+
+face_match:
+  model_name: "ArcFace" # ArcFace | Facenet | VGG-Face
+  detector_backend: "opencv" # opencv | ssd | mtcnn
+  threshold_match: 0.60
+  threshold_uncertain: 0.40
+
+name_match:
+  threshold_match: 85.0
+  threshold_uncertain: 65.0
+
+decision:
+  weights:
+    quality: 0.10
+    ocr: 0.20
+    face: 0.30
+    name: 0.25
+    duplicate: 0.15
+  approve_threshold: 0.75
+  review_threshold: 0.50
+
+database:
+  db_path: "data/verifyai.db"
+
+server:
+  host: "0.0.0.0"
+  port: 8000
