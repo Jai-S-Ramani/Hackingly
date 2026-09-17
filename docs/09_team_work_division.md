@@ -13,7 +13,7 @@
 ```mermaid
 graph TD
     subgraph "Member 1 · Core Backend Lead"
-        M1["⚡ FastAPI Orchestrator<br/>🗄️ SQLite Hash Registry<br/>🔁 Stage 4: Duplicate Detector"]
+        M1["⚡ FastAPI Orchestrator<br/>☁️ Supabase Cloud DB (Postgres)<br/>🔁 Stage 4: Duplicate Detector"]
     end
 
     subgraph "Member 2 · OCR & Parsing Specialist"
@@ -45,7 +45,7 @@ graph TD
 
 | Role / Track | Member Focus | Key Source Files | Delivered Capabilities |
 |---|---|---|---|
-| **Member 1**<br/>`Backend Lead` | Architecture & Duplicate Fraud | `app/main.py`<br/>`app/database.py`<br/>`pipeline/orchestrator.py`<br/>`pipeline/duplicate_detector.py` | • FastAPI server (`POST /verify`, `GET /registrations`)<br/>• SQLite schema (`events`, `verifications`, `id_hashes`)<br/>• SHA-256 fingerprinting for duplicate ID prevention |
+| **Member 1**<br/>`Backend Lead` | Architecture & Duplicate Fraud | `app/main.py`<br/>`app/database.py`<br/>`pipeline/orchestrator.py`<br/>`pipeline/duplicate_detector.py` | • FastAPI server (`POST /verify`, `GET /registrations`)<br/>• Supabase Cloud DB (Postgres) with local SQLite fallback<br/>• SHA-256 salted fingerprinting for duplicate ID prevention |
 | **Member 2**<br/>`OCR Specialist` | Document Parsing & Checksums | `pipeline/ocr_adapter.py`<br/>`pipeline/field_extractor.py`<br/>`tests/test_ocr.py` | • Pluggable OCR (`EasyOCR`, `Textract`, `Mock`)<br/>• **Aadhaar Verhoeff checksum algorithm**<br/>• PAN format validation (`[A-Z]{5}[0-9]{4}[A-Z]`)<br/>• Student College ID & roll number parsing |
 | **Member 3**<br/>`CV Specialist` | Image Quality & Tampering | `pipeline/quality_analyzer.py`<br/>`tests/test_quality.py` | • Laplacian variance blur detector (< 100 threshold)<br/>• Glare & overexposure checking<br/>• **Error Level Analysis (ELA)** generating visual heatmaps<br/>• EXIF inspection for Photoshop / Canva signatures |
 | **Member 4**<br/>`Biometrics Specialist` | Facial & Name Matching | `pipeline/identity_verifier.py`<br/>`tests/test_identity.py` | • Facial embedding comparison with **DeepFace (ArcFace)**<br/>• Auto-crop face badge thumbnails from ID & selfie<br/>• **RapidFuzz** token sort ratio for Indian names |
