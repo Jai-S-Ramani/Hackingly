@@ -310,7 +310,7 @@ if menu == "Live Registration Feed":
         st.info("No records found matching criteria. Go to 'Judge Interactive Sandbox' to run live simulated submissions.")
     else:
         for reg in filtered:
-            status = reg.get("decision", "manual_review")
+            status = reg.get("decision") or "manual_review"
             conf = int((reg.get("confidence") or 0.0) * 100)
             badge_class = f"badge-{status.replace('_', '')}"
 
