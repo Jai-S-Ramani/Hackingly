@@ -43,8 +43,19 @@ def main():
         text=True
     )
 
+    # 3. Start Next.js Frontend
+    print("⚛️  Launching Next.js Production UI on http://localhost:3000 ...")
+    frontend_process = None
+    if os.path.exists("frontend"):
+        frontend_process = subprocess.Popen(
+            ["npm", "run", "dev", "--", "-p", "3000"],
+            cwd="frontend",
+            shell=True
+        )
+
     print("\n" + "=" * 65)
     print("✨ ALL SERVICES ARE LIVE!")
+    print("   👉 Next.js Frontend:    http://localhost:3000")
     print("   👉 Organizer Dashboard: http://localhost:8501")
     print("   👉 API Documentation:   http://localhost:8000/docs")
     print("   👉 Health Check:        http://localhost:8000/api/v1/health")
@@ -55,6 +66,8 @@ def main():
         print("\nStopping services...")
         api_process.terminate()
         dash_process.terminate()
+        if frontend_process:
+            frontend_process.terminate()
         sys.exit(0)
 
     signal.signal(signal.SIGINT, signal_handler)
@@ -65,6 +78,8 @@ def main():
     except KeyboardInterrupt:
         api_process.terminate()
         dash_process.terminate()
+        if frontend_process:
+            frontend_process.terminate()
         print("\nServices terminated.")
 
 if __name__ == "__main__":

@@ -1,0 +1,11 @@
+{
+  "name": "verifyai-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "description": "VerifyAI - AI-Powered Identity & Eligibility Verification Platform",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev -- -p 3000",
+    "build": "npm --prefix frontend run build",
+    "start": "npm --prefix frontend run start -- -p 3000"
+  }
+}
