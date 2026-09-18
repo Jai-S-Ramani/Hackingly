@@ -257,6 +257,7 @@ def get_all_registrations(event_id: Optional[str] = None, status: Optional[str] 
                     continue
 
                 formatted.append({
+                    "id": r.get("id"),
                     "registration_id": r.get("id"),
                     "event_id": r.get("event_id"),
                     "form_name": r.get("form_name"),
@@ -290,6 +291,7 @@ def get_all_registrations(event_id: Optional[str] = None, status: Optional[str] 
 
     query = """
     SELECT 
+        r.id,
         r.id as registration_id,
         r.event_id,
         r.form_name,
@@ -355,6 +357,7 @@ def get_registration_by_id(reg_id: str) -> Optional[Dict[str, Any]]:
                 ver = r.get("verifications")
                 v = ver[0] if isinstance(ver, list) and ver else (ver if isinstance(ver, dict) else {})
                 return {
+                    "id": r.get("id"),
                     "registration_id": r.get("id"),
                     "event_id": r.get("event_id"),
                     "form_name": r.get("form_name"),
@@ -384,6 +387,7 @@ def get_registration_by_id(reg_id: str) -> Optional[Dict[str, Any]]:
     cursor = conn.cursor()
     cursor.execute("""
     SELECT 
+        r.id,
         r.id as registration_id,
         r.event_id,
         r.form_name,
