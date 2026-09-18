@@ -1,0 +1,204 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Verispect — Enterprise Platform Architecture",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "verification-pipeline",
+        "label": "Verification pipeline",
+        "focus": ["participant", "api", "forensics", "ocr_engine", "biometrics", "duplicates", "decision"],
+        "note": "Multipart document upload through 5-stage AI pipeline to automated eligibility verdict."
+      },
+      {
+        "id": "persistence-delivery",
+        "label": "Supabase Cloud & Operator Delivery",
+        "focus": ["decision", "supabase", "command_center"],
+        "note": "Pure Supabase PostgreSQL cloud persistence with real-time audit records and Verispect Command Center."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "participant",
+      "type": "external",
+      "label": "Applicant Portal",
+      "sublabel": "Registration & Upload",
+      "pos": [40, 260],
+      "size": [140, 60]
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "FastAPI Server",
+      "sublabel": "REST API :8000",
+      "brand": "fastapi",
+      "pos": [250, 260],
+      "size": [150, 60]
+    },
+    {
+      "id": "forensics",
+      "type": "security",
+      "label": "Quality & ELA",
+      "sublabel": "Laplacian Forensics",
+      "brand": "python",
+      "pos": [480, 110],
+      "size": [150, 60]
+    },
+    {
+      "id": "ocr_engine",
+      "type": "backend",
+      "label": "OCR & Checksum",
+      "sublabel": "EasyOCR & Verhoeff",
+      "brand": "pytorch",
+      "pos": [480, 260],
+      "size": [150, 60]
+    },
+    {
+      "id": "biometrics",
+      "type": "security",
+      "label": "Identity Match",
+      "sublabel": "DeepFace & RapidFuzz",
+      "brand": "python",
+      "pos": [710, 110],
+      "size": [150, 60]
+    },
+    {
+      "id": "duplicates",
+      "type": "security",
+      "label": "Fraud Defense",
+      "sublabel": "SHA-256 Fingerprint",
+      "brand": "python",
+      "pos": [710, 260],
+      "size": [150, 60]
+    },
+    {
+      "id": "decision",
+      "type": "backend",
+      "label": "Decision Engine",
+      "sublabel": "Multi-Signal Scoring",
+      "brand": "python",
+      "pos": [940, 260],
+      "size": [150, 60]
+    },
+    {
+      "id": "supabase",
+      "type": "database",
+      "label": "Supabase Cloud",
+      "sublabel": "Pure PostgreSQL",
+      "brand": "supabase",
+      "pos": [940, 420],
+      "size": [150, 60]
+    },
+    {
+      "id": "command_center",
+      "type": "frontend",
+      "label": "Verispect UI",
+      "sublabel": "Next.js 16 & Streamlit",
+      "brand": "next-js",
+      "pos": [1170, 260],
+      "size": [150, 60]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Verispect Automated Verification Platform Runtime",
+      "wraps": ["api", "forensics", "ocr_engine", "biometrics", "duplicates", "decision", "supabase"]
+    }
+  ],
+  "connections": [
+    {
+      "id": "participant-to-api",
+      "from": "participant",
+      "to": "api",
+      "label": "upload",
+      "variant": "emphasis"
+    },
+    {
+      "id": "api-to-forensics",
+      "from": "api",
+      "to": "forensics",
+      "label": "image bytes",
+      "fromSide": "top",
+      "toSide": "left"
+    },
+    {
+      "id": "api-to-ocr",
+      "from": "api",
+      "to": "ocr_engine",
+      "label": "doc image"
+    },
+    {
+      "id": "forensics-to-biometrics",
+      "from": "forensics",
+      "to": "biometrics",
+      "label": "quality pass"
+    },
+    {
+      "id": "ocr-to-duplicates",
+      "from": "ocr_engine",
+      "to": "duplicates",
+      "label": "ID number"
+    },
+    {
+      "id": "biometrics-to-decision",
+      "from": "biometrics",
+      "to": "decision",
+      "label": "match score",
+      "fromSide": "right",
+      "toSide": "top"
+    },
+    {
+      "id": "duplicates-to-decision",
+      "from": "duplicates",
+      "to": "decision",
+      "label": "fraud flag"
+    },
+    {
+      "id": "decision-to-supabase",
+      "from": "decision",
+      "to": "supabase",
+      "label": "pure cloud persist",
+      "variant": "emphasis",
+      "labelDy": 24
+    },
+    {
+      "id": "decision-to-command-center",
+      "from": "decision",
+      "to": "command_center",
+      "label": "live audit feed",
+      "variant": "emphasis"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Ingestion & Forensic Analysis",
+      "items": [
+        "Participant submits ID documents through applicant portal or direct REST endpoint",
+        "Stage 1 performs Laplacian blur analysis and Error Level Analysis (ELA) tampering detection",
+        "Stage 2 extracts document text with EasyOCR and verifies checksum with Aadhaar Verhoeff algorithm"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Biometrics & Fraud Defense",
+      "items": [
+        "Stage 3 matches selfie face embeddings with ID photo via DeepFace and validates form name via RapidFuzz",
+        "Stage 4 generates cryptographic SHA-256 fingerprint of ID document to detect reuse across applicants",
+        "Real-time duplicate detection queries Supabase id_hashes index with zero local SQLite dependencies"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Decision & Supabase Cloud",
+      "items": [
+        "Stage 5 computes weighted confidence scores and enforces event-specific eligibility policies",
+        "Supabase Cloud PostgreSQL acts as the single source of truth for registrations, verifications, and hashes",
+        "Verispect Command Center (Next.js 16) and Ops Console provide dual-theme live inspection and human override"
+      ]
+    }
+  ]
+}

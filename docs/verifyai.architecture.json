@@ -2,7 +2,7 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "VerifyAI — Platform Architecture",
+    "title": "Verispect — Enterprise Platform Architecture",
     "quality_profile": "showcase",
     "views": [
       {
@@ -13,9 +13,9 @@
       },
       {
         "id": "persistence-delivery",
-        "label": "Persistence and organizer delivery",
-        "focus": ["decision", "supabase", "organizer"],
-        "note": "Supabase PostgreSQL cloud persistence with real-time audit records and organizer review."
+        "label": "Supabase Cloud & Operator Delivery",
+        "focus": ["decision", "supabase", "command_center"],
+        "note": "Pure Supabase PostgreSQL cloud persistence with real-time audit records and Verispect Command Center."
       }
     ]
   },
@@ -23,16 +23,16 @@
     {
       "id": "participant",
       "type": "external",
-      "label": "Participant",
-      "sublabel": "Registration Form",
+      "label": "Applicant Portal",
+      "sublabel": "Registration & Upload",
       "pos": [40, 260],
-      "size": [130, 60]
+      "size": [140, 60]
     },
     {
       "id": "api",
       "type": "backend",
       "label": "FastAPI Server",
-      "sublabel": "POST /verify :8000",
+      "sublabel": "REST API :8000",
       "brand": "fastapi",
       "pos": [250, 260],
       "size": [150, 60]
@@ -49,7 +49,7 @@
     {
       "id": "ocr_engine",
       "type": "backend",
-      "label": "OCR Engine",
+      "label": "OCR & Checksum",
       "sublabel": "EasyOCR & Verhoeff",
       "brand": "pytorch",
       "pos": [480, 260],
@@ -67,7 +67,7 @@
     {
       "id": "duplicates",
       "type": "security",
-      "label": "Duplicate Check",
+      "label": "Fraud Defense",
       "sublabel": "SHA-256 Fingerprint",
       "brand": "python",
       "pos": [710, 260],
@@ -77,7 +77,7 @@
       "id": "decision",
       "type": "backend",
       "label": "Decision Engine",
-      "sublabel": "Weighted Scoring",
+      "sublabel": "Multi-Signal Scoring",
       "brand": "python",
       "pos": [940, 260],
       "size": [150, 60]
@@ -86,24 +86,25 @@
       "id": "supabase",
       "type": "database",
       "label": "Supabase Cloud",
-      "sublabel": "PostgreSQL & Hashes",
+      "sublabel": "Pure PostgreSQL",
       "brand": "supabase",
       "pos": [940, 420],
       "size": [150, 60]
     },
     {
-      "id": "organizer",
+      "id": "command_center",
       "type": "frontend",
-      "label": "Organizer UI",
-      "sublabel": "Streamlit & TypeScript",
+      "label": "Verispect UI",
+      "sublabel": "Next.js 16 & Streamlit",
+      "brand": "next-js",
       "pos": [1170, 260],
-      "size": [140, 60]
+      "size": [150, 60]
     }
   ],
   "boundaries": [
     {
       "kind": "region",
-      "label": "VerifyAI Automated Verification Platform Runtime",
+      "label": "Verispect Automated Verification Platform Runtime",
       "wraps": ["api", "forensics", "ocr_engine", "biometrics", "duplicates", "decision", "supabase"]
     }
   ],
@@ -159,26 +160,26 @@
       "id": "decision-to-supabase",
       "from": "decision",
       "to": "supabase",
-      "label": "persist & hash",
+      "label": "pure cloud persist",
       "variant": "emphasis",
       "labelDy": 24
     },
     {
-      "id": "decision-to-organizer",
+      "id": "decision-to-command-center",
       "from": "decision",
-      "to": "organizer",
-      "label": "verdicts",
+      "to": "command_center",
+      "label": "live audit feed",
       "variant": "emphasis"
     }
   ],
   "cards": [
     {
       "dot": "cyan",
-      "title": "Ingestion & Forensics",
+      "title": "Ingestion & Forensic Analysis",
       "items": [
-        "Participant uploads ID document image and optional selfie via multipart form or web portal",
-        "Stage 1 evaluates Laplacian blur variance and Error Level Analysis (ELA) tampering artifacts",
-        "Stage 2 uses a pluggable OCR adapter with Aadhaar Verhoeff checksum algorithm"
+        "Participant submits ID documents through applicant portal or direct REST endpoint",
+        "Stage 1 performs Laplacian blur analysis and Error Level Analysis (ELA) tampering detection",
+        "Stage 2 extracts document text with EasyOCR and verifies checksum with Aadhaar Verhoeff algorithm"
       ]
     },
     {
@@ -186,17 +187,17 @@
       "title": "Biometrics & Fraud Defense",
       "items": [
         "Stage 3 matches selfie face embeddings with ID photo via DeepFace and validates form name via RapidFuzz",
-        "Stage 4 computes SHA-256 fingerprint of ID document to detect reuse across different registrants",
-        "Cloud duplicate detection queries Supabase id_hashes index with sub-millisecond lookups"
+        "Stage 4 generates cryptographic SHA-256 fingerprint of ID document to detect reuse across applicants",
+        "Real-time duplicate detection queries Supabase id_hashes index with zero local SQLite dependencies"
       ]
     },
     {
       "dot": "violet",
       "title": "Decision & Supabase Cloud",
       "items": [
-        "Stage 5 computes weighted confidence scores and enforces event eligibility rules",
-        "Supabase cloud PostgreSQL stores all participant registrations, audit trails, and SHA-256 hashes",
-        "Streamlit dashboard provides live review, ELA heatmaps, face audit, and manual overrides"
+        "Stage 5 computes weighted confidence scores and enforces event-specific eligibility policies",
+        "Supabase Cloud PostgreSQL acts as the single source of truth for registrations, verifications, and hashes",
+        "Verispect Command Center (Next.js 16) and Ops Console provide dual-theme live inspection and human override"
       ]
     }
   ]
