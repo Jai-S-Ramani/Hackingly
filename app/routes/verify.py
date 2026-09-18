@@ -22,19 +22,27 @@ async def verify_registration(
     form_dob: Optional[str] = Form(None, description="Date of birth entered in form (YYYY-MM-DD)"),
     event_id: str = Form("hackathon-2026", description="Event ID to evaluate eligibility against")
 ):
-    # Validate extension
+    # Validate extension and size
     allowed_extensions = {".jpg", ".jpeg", ".png", ".webp"}
-    id_ext = Path(id_image.filename).suffix.lower()
+    id_ext = Path(id_image.filename or "").suffix.lower()
     if id_ext not in allowed_extensions:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Unsupported ID image format '{id_ext}'. Please upload JPEG, PNG, or WebP."
         )
 
+    MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB limit
+    content = await id_image.read()
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="ID image exceeds 10MB limit. Please upload a smaller image."
+        )
+
     # Save temp ID image
     temp_id_path = UPLOAD_DIR / f"temp_id_{os.urandom(6).hex()}{id_ext}"
     with open(temp_id_path, "wb") as buffer:
-        shutil.copyfileobj(id_image.file, buffer)
+        buffer.write(content)
 
     temp_selfie_path = None
     if selfie and selfie.filename:

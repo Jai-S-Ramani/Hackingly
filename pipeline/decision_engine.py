@@ -64,7 +64,7 @@ class DecisionEngine:
         )
         final_confidence = max(0.0, min(1.0, round(final_confidence, 2)))
 
-        # Age Check
+        # Age Check (DEFECT-006)
         age_passed = True
         computed_age = None
         dob_str = ocr_res.get("date_of_birth")
@@ -78,7 +78,14 @@ class DecisionEngine:
                     age_passed = False
                     all_flags.append(f"underage_participant_{computed_age}_years")
             except Exception:
-                pass
+                all_flags.append("age_unverified")
+        else:
+            # Missing or unreadable date of birth must not silently pass
+            all_flags.append("age_unverified")
+
+        # Aadhaar / ID Checksum Validation (DEFECT-003)
+        if ocr_res.get("checksum_valid") is False:
+            all_flags.append("invalid_id_checksum")
 
         # Student Only Check
         student_passed = True
@@ -98,6 +105,9 @@ class DecisionEngine:
                 reasons.append("User Already Entered: A registration with this identification document has already been submitted for this event.")
             else:
                 reasons.append("Duplicate ID detected: This document was already registered by another participant.")
+        elif "invalid_id_checksum" in all_flags:
+            decision = "rejected"
+            reasons.append("Invalid ID Checksum: Document failed Verhoeff mathematical integrity check (probable fake ID).")
         elif not age_passed:
             decision = "rejected"
             reasons.append(f"Age restriction failure: Participant is {computed_age} years old (minimum {event_rules.get('min_age', 18)}+ required).")
@@ -169,7 +179,7 @@ class DecisionEngine:
                     "details": duplicate_res.get("details"),
                 },
                 "eligibility": {
-                    "age_check": "pass" if age_passed else "fail",
+                    "age_check": "pass" if (age_passed and dob_str) else ("unverified" if not dob_str else "fail"),
                     "computed_age": computed_age,
                     "student_check": "pass" if student_passed else "fail",
                 }

@@ -98,10 +98,24 @@ class QualityAnalyzer:
         except Exception:
             pass
 
+        # Check for unreadable/corrupt file decode errors (DEFECT-007)
+        has_decode_error = any(
+            f.startswith("quality_cv_error") or 
+            f.startswith("quality_ela_error") or 
+            f in ["file_not_found", "image_decode_failed"]
+            for f in flags
+        )
+        if has_decode_error:
+            resolution_ok = False
+            quality_confidence = 0.0
+
         quality_confidence = max(0.0, min(1.0, quality_confidence))
-        quality_passed = ("blurry_image" not in flags and 
-                          "low_resolution" not in flags and 
-                          "potential_tampering_ela" not in flags)
+        quality_passed = (
+            not has_decode_error and
+            "blurry_image" not in flags and 
+            "low_resolution" not in flags and 
+            "potential_tampering_ela" not in flags
+        )
 
         return {
             "quality_passed": quality_passed,

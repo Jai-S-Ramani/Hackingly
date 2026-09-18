@@ -53,6 +53,8 @@ class IdentityVerifier:
             flags.append("face_match_uncertain")
         elif face_match_result.get("verdict") == "no_selfie_provided":
             flags.append("selfie_missing")
+        elif face_match_result.get("verdict") == "error":
+            flags.append("face_match_error")
 
         return {
             "name_match": name_match_result,
@@ -144,12 +146,12 @@ class IdentityVerifier:
                 "details": f"Cosine similarity: {round(score, 3)}"
             }
         except Exception as e:
-            # Fallback for CPU / mock testing
+            # Fail-closed on error rather than fabricating a fake match (DEFECT-002)
             return {
-                "score": 0.88,
-                "verdict": "match",
+                "score": None,
+                "verdict": "error",
                 "selfie_provided": True,
-                "details": f"Face verification score: 0.88"
+                "details": f"Face comparison error: {str(e)}"
             }
 
     def _crop_face_thumbnail(self, img_path: Optional[str]) -> Optional[str]:
@@ -191,7 +193,8 @@ class IdentityVerifier:
 
     def _normalize_name(self, name: str) -> str:
         clean = name.lower()
-        clean = re.sub(r"\b(mr|ms|mrs|dr|prof|kumar|kumari|shri|smt)\b\.?", "", clean)
+        # Strip true honorifics/titles only; never strip 'kumar' or 'kumari' which are genuine Indian surnames (DEFECT-008)
+        clean = re.sub(r"\b(mr|ms|mrs|dr|prof|shri|smt)\b\.?", "", clean)
         clean = re.sub(r"[^a-z\s]", "", clean)
         return " ".join(clean.split())
 

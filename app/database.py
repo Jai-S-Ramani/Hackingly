@@ -4,6 +4,20 @@ from typing import Optional, List, Dict, Any
 from app.config import config
 
 _supabase_client = None
+DB_PATH = None
+
+def _is_sqlite() -> bool:
+    global DB_PATH
+    return DB_PATH is not None or os.getenv("DATABASE_PROVIDER") == "sqlite" or config.get("database", {}).get("provider") == "sqlite"
+
+def _get_sqlite_conn():
+    global DB_PATH
+    import sqlite3
+    path = DB_PATH or config.get("database", {}).get("db_path") or "data/verifyai.db"
+    os.makedirs(os.path.dirname(os.path.abspath(str(path))), exist_ok=True)
+    conn = sqlite3.connect(str(path))
+    conn.row_factory = sqlite3.Row
+    return conn
 
 def get_supabase_client():
     """Initializes and returns the authoritative Supabase client."""
@@ -24,6 +38,8 @@ def get_supabase_client():
 
 def is_supabase_active() -> bool:
     """Tests if Supabase is reachable and the required tables exist."""
+    if _is_sqlite():
+        return False
     try:
         client = get_supabase_client()
         client.table("events").select("id").limit(1).execute()
@@ -32,7 +48,67 @@ def is_supabase_active() -> bool:
         return False
 
 def init_db():
-    """Validates Supabase connection on startup and ensures default event exists."""
+    """Validates Supabase connection on startup, or initializes SQLite for test harnesses."""
+    if _is_sqlite():
+        conn = _get_sqlite_conn()
+        c = conn.cursor()
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS events (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                min_age INTEGER DEFAULT 18,
+                student_only BOOLEAN DEFAULT 0,
+                allowed_id_types TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS registrations (
+                id TEXT PRIMARY KEY,
+                event_id TEXT,
+                form_name TEXT,
+                form_email TEXT,
+                form_dob TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS verifications (
+                id TEXT PRIMARY KEY,
+                registration_id TEXT,
+                decision TEXT,
+                confidence REAL,
+                reason TEXT,
+                flags TEXT,
+                breakdown TEXT,
+                extracted_name TEXT,
+                extracted_dob TEXT,
+                extracted_id_number_masked TEXT,
+                extracted_id_type TEXT,
+                face_match_score REAL,
+                name_match_score REAL,
+                quality_score REAL,
+                tampering_score REAL,
+                is_duplicate BOOLEAN,
+                processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS id_hashes (
+                id TEXT PRIMARY KEY,
+                hash TEXT NOT NULL,
+                id_type TEXT NOT NULL,
+                id_number_masked TEXT NOT NULL,
+                registrant_name TEXT NOT NULL,
+                registration_id TEXT NOT NULL,
+                event_id TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        conn.commit()
+        conn.close()
+        return
+
     client = get_supabase_client()
     try:
         res = client.table("events").select("id").eq("id", "hackathon-2026").execute()
@@ -207,13 +283,33 @@ def update_decision_override(reg_id: str, new_decision: str, reason: str):
     }).eq("registration_id", reg_id).execute()
 
 def lookup_id_hashes(id_hash: str) -> List[Dict[str, Any]]:
-    """Looks up existing registrations matching an ID SHA-256 fingerprint in Supabase."""
+    """Looks up existing registrations matching an ID SHA-256 fingerprint."""
+    if _is_sqlite():
+        conn = _get_sqlite_conn()
+        c = conn.cursor()
+        c.execute("SELECT registrant_name, registration_id, event_id, created_at FROM id_hashes WHERE hash = ?", (id_hash,))
+        rows = [dict(row) for row in c.fetchall()]
+        conn.close()
+        return rows
+
     client = get_supabase_client()
     res = client.table("id_hashes").select("registrant_name, registration_id, event_id, created_at").eq("hash", id_hash).execute()
     return res.data or []
 
 def register_id_hash(id_hash: str, id_type: str, id_number_masked: str, registrant_name: str, registration_id: str, event_id: Optional[str] = None):
-    """Registers a new ID SHA-256 fingerprint in Supabase."""
+    """Registers a new ID SHA-256 fingerprint."""
+    if _is_sqlite():
+        import uuid
+        conn = _get_sqlite_conn()
+        c = conn.cursor()
+        c.execute(
+            "INSERT INTO id_hashes (id, hash, id_type, id_number_masked, registrant_name, registration_id, event_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (f"hash_{uuid.uuid4().hex[:8]}", id_hash, id_type, id_number_masked, registrant_name, registration_id, event_id)
+        )
+        conn.commit()
+        conn.close()
+        return
+
     client = get_supabase_client()
 
     # Ensure parent registration exists to satisfy foreign key reference

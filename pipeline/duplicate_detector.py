@@ -45,20 +45,41 @@ class DuplicateDetector:
         details = "No duplicates found. First-time registration."
 
         if existing:
-            is_duplicate = True
             names_on_file = [row["registrant_name"].strip().lower() for row in existing]
-            same_person = any(clean_name in n or n in clean_name for n in names_on_file)
+            
+            # Robust fuzzy token matching instead of substring containment (DEFECT-005)
+            try:
+                from rapidfuzz import fuzz
+                same_person = any(
+                    fuzz.token_sort_ratio(clean_name, n) >= 80 or fuzz.ratio(clean_name, n) >= 85
+                    for n in names_on_file
+                )
+            except ImportError:
+                same_person = any(
+                    clean_name == n or set(clean_name.split()) == set(n.split())
+                    for n in names_on_file
+                )
 
             if not same_person:
                 # Impersonation / Shared ID fraud
+                is_duplicate = True
                 flags.append("duplicate_id_different_name")
                 prior_names = ", ".join([row["registrant_name"] for row in existing])
                 details = f"FRAUD ALERT: This {id_type.upper()} was previously used by: {prior_names}"
             else:
-                # Same user trying to register again
-                flags.append("user_already_registered")
-                prev_date = existing[0].get("created_at", "recently")
-                details = f"User Already Entered: A registration with this ID was already submitted on {prev_date}."
+                # Same user. Check if this is for the SAME event or a DIFFERENT event (DEFECT-004).
+                same_event_entry = any(row.get("event_id") == event_id for row in existing) if event_id else True
+                if same_event_entry:
+                    is_duplicate = True
+                    flags.append("user_already_registered")
+                    prev_date = existing[0].get("created_at", "recently")
+                    details = f"User Already Entered: A registration with this ID was already submitted on {prev_date}."
+                else:
+                    # Legitimate repeat participant registering for a different event
+                    is_duplicate = False
+                    details = f"Participant verified: Valid repeat registration for event '{event_id}'."
+                    masked_id = f"****{clean_id[-4:]}" if len(clean_id) >= 4 else clean_id
+                    register_id_hash(id_hash, id_type, masked_id, registrant_name, registration_id, event_id)
         else:
             # Register this new ID hash
             masked_id = f"****{clean_id[-4:]}" if len(clean_id) >= 4 else clean_id

@@ -1,6 +1,6 @@
 import re
 from datetime import datetime
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 
 # --- Verhoeff Checksum Algorithm for Aadhaar ---
 VERHOEFF_D = [
