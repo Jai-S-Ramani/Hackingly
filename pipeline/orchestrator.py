@@ -9,7 +9,7 @@ from pipeline.field_extractor import extract_id_fields
 from pipeline.identity_verifier import verify_identity
 from pipeline.duplicate_detector import check_duplicate
 from pipeline.decision_engine import evaluate_eligibility
-from app.database import save_registration_and_verification, get_connection
+from app.database import save_registration_and_verification, get_event_by_id
 
 class PipelineOrchestrator:
     def __init__(self):
@@ -26,7 +26,7 @@ class PipelineOrchestrator:
         registration_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        Coordinates the 5-stage automated identity & eligibility verification pipeline:
+        Executes the autonomous 5-stage identity verification pipeline:
         Stage 1: Document Quality & Forensic Tampering (Laplacian + ELA Heatmap + EXIF)
         Stage 2: Pluggable OCR & Field Parsing (Aadhaar Verhoeff / PAN / College ID)
         Stage 3: Biometrics & Name Fuzzy Match (Face Embedding + RapidFuzz + Face Crops)
@@ -36,17 +36,15 @@ class PipelineOrchestrator:
         start_time = time.time()
         reg_id = registration_id or f"reg_{uuid.uuid4().hex[:8]}"
 
-        # 1. Fetch Event Rules
+        # 1. Fetch Event Rules from Supabase
         event_rules = {"min_age": 18, "student_only": False, "allowed_id_types": ["aadhaar", "pan", "college_id", "voter_id"]}
         try:
-            conn = get_connection()
-            cursor = conn.cursor()
-            cursor.execute("SELECT min_age, max_age, student_only, allowed_id_types FROM events WHERE id = ?;", (event_id,))
-            ev_row = cursor.fetchone()
+            ev_row = get_event_by_id(event_id)
             if ev_row:
-                event_rules["min_age"] = ev_row["min_age"] or 18
-                event_rules["student_only"] = bool(ev_row["student_only"])
-            conn.close()
+                event_rules["min_age"] = ev_row.get("min_age") or 18
+                event_rules["student_only"] = bool(ev_row.get("student_only"))
+                if ev_row.get("allowed_id_types"):
+                    event_rules["allowed_id_types"] = ev_row["allowed_id_types"]
         except Exception:
             pass
 

@@ -1,12 +1,10 @@
 import os
-import sqlite3
 import cv2
 import pytest
 from pipeline.quality_analyzer import QualityAnalyzer
 from pipeline.decision_engine import DecisionEngine
 
 SAMPLES_DIR = "data/samples"
-DB_PATH = "data/verifyai.db"
 
 def test_all_sample_files_exist():
     expected_files = [
@@ -48,28 +46,20 @@ def test_tampered_document_ela_detection():
     assert res["ela_heatmap_base64"] is not None
 
 def test_seeded_database_integrity():
-    from app.database import get_supabase_client, is_supabase_active, get_all_registrations
-    
-    if is_supabase_active():
-        client = get_supabase_client()
-        res = client.table("registrations").select("id").execute()
-        reg_count = len(res.data)
-        assert reg_count >= 15, f"Expected at least 15 seeded registrations in Supabase, got {reg_count}"
+    from app.database import get_supabase_client, is_supabase_active
+    assert is_supabase_active(), "Supabase must be reachable and active"
+    client = get_supabase_client()
+    assert client is not None, "Supabase client must be initialized"
 
-        res_app = client.table("verifications").select("id").eq("decision", "approved").execute()
-        assert len(res_app.data) >= 6, f"Expected at least 6 approved registrations in Supabase, got {len(res_app.data)}"
+    res = client.table("registrations").select("id").execute()
+    reg_count = len(res.data)
+    assert reg_count >= 15, f"Expected at least 15 seeded registrations in Supabase, got {reg_count}"
 
-        res_rej = client.table("verifications").select("id").eq("decision", "rejected").execute()
-        assert len(res_rej.data) >= 4, f"Expected at least 4 rejected registrations in Supabase, got {len(res_rej.data)}"
+    res_app = client.table("verifications").select("id").eq("decision", "approved").execute()
+    assert len(res_app.data) >= 6, f"Expected at least 6 approved registrations in Supabase, got {len(res_app.data)}"
 
-        res_rev = client.table("verifications").select("id").eq("decision", "manual_review").execute()
-        assert len(res_rev.data) >= 2, f"Expected at least 2 manual review registrations in Supabase, got {len(res_rev.data)}"
-    else:
-        assert os.path.exists(DB_PATH), f"Database file {DB_PATH} not found"
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        
-        cursor.execute("SELECT COUNT(*) FROM registrations;")
-        reg_count = cursor.fetchone()[0]
-        assert reg_count >= 15, f"Expected at least 15 seeded registrations, got {reg_count}"
-        conn.close()
+    res_rej = client.table("verifications").select("id").eq("decision", "rejected").execute()
+    assert len(res_rej.data) >= 4, f"Expected at least 4 rejected registrations in Supabase, got {len(res_rej.data)}"
+
+    res_rev = client.table("verifications").select("id").eq("decision", "manual_review").execute()
+    assert len(res_rev.data) >= 2, f"Expected at least 2 manual review registrations in Supabase, got {len(res_rev.data)}"

@@ -19,7 +19,7 @@ export const Header: React.FC = () => {
   const { theme, toggleTheme } = useThemeStore();
   const [healthStatus, setHealthStatus] = useState<{ status: string; database: string }>({
     status: 'checking',
-    database: 'sqlite'
+    database: 'supabase'
   });
 
   useEffect(() => {
@@ -137,7 +137,7 @@ export const Header: React.FC = () => {
           >
             <span className={`w-1.5 h-1.5 rounded-full ${healthStatus.status === 'ok' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
             <span className="font-mono text-slate-700 dark:text-slate-300">
-              {healthStatus.status === 'ok' ? (healthStatus.database === 'supabase' ? 'Supabase Cloud' : 'FastAPI Active') : 'Offline Mode'}
+              {healthStatus.status === 'ok' || healthStatus.status === 'healthy' ? 'Supabase Cloud' : 'Connecting...'}
             </span>
           </div>
 

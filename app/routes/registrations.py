@@ -1,7 +1,7 @@
 from typing import Optional, List, Dict, Any
 from fastapi import APIRouter, HTTPException, status, Query
 from pydantic import BaseModel
-from app.database import get_all_registrations, get_registration_by_id, update_decision_override, get_connection
+from app.database import get_all_registrations, get_registration_by_id, update_decision_override, get_supabase_client
 import json
 
 router = APIRouter(tags=["Registrations & Events"])
@@ -49,19 +49,13 @@ def override_registration_decision(reg_id: str, body: OverrideRequest):
 
 @router.post("/events", status_code=status.HTTP_201_CREATED)
 def create_event(event: EventCreateRequest):
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-    INSERT OR REPLACE INTO events (id, name, min_age, max_age, student_only, allowed_id_types)
-    VALUES (?, ?, ?, ?, ?, ?);
-    """, (
-        event.id,
-        event.name,
-        event.min_age,
-        event.max_age,
-        1 if event.student_only else 0,
-        json.dumps(event.allowed_id_types)
-    ))
-    conn.commit()
-    conn.close()
+    client = get_supabase_client()
+    client.table("events").upsert({
+        "id": event.id,
+        "name": event.name,
+        "min_age": event.min_age,
+        "max_age": event.max_age,
+        "student_only": event.student_only,
+        "allowed_id_types": event.allowed_id_types
+    }).execute()
     return {"status": "created", "event_id": event.id}

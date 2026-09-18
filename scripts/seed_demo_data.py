@@ -15,94 +15,19 @@ Covers comprehensive real-world scenarios:
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-import sqlite3
 import json
 import uuid
 import hashlib
 from datetime import datetime, timedelta
 
-DB_PATH = "data/verifyai.db"
-
 def seed_database():
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
+    from app.database import get_supabase_client
+    client = get_supabase_client()
+    if not client:
+        print("[ERROR] Supabase client could not be initialized.")
+        return
 
-    # Drop existing demo data and recreate clean schema
-    cursor.execute("DROP TABLE IF EXISTS verifications;")
-    cursor.execute("DROP TABLE IF EXISTS registrations;")
-    cursor.execute("DROP TABLE IF EXISTS id_hashes;")
-    cursor.execute("DROP TABLE IF EXISTS events;")
-
-    cursor.execute("""
-    CREATE TABLE events (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        min_age INTEGER DEFAULT 18,
-        max_age INTEGER,
-        student_only BOOLEAN DEFAULT 0,
-        allowed_id_types TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-    """)
-
-    cursor.execute("""
-    CREATE TABLE registrations (
-        id TEXT PRIMARY KEY,
-        event_id TEXT,
-        form_name TEXT NOT NULL,
-        form_email TEXT,
-        form_dob TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY(event_id) REFERENCES events(id)
-    );
-    """)
-
-    cursor.execute("""
-    CREATE TABLE verifications (
-        id TEXT PRIMARY KEY,
-        registration_id TEXT NOT NULL,
-        decision TEXT CHECK(decision IN ('approved', 'manual_review', 'rejected')),
-        confidence REAL,
-        reason TEXT,
-        flags TEXT,
-        breakdown TEXT,
-        extracted_name TEXT,
-        extracted_dob TEXT,
-        extracted_id_number_masked TEXT,
-        extracted_id_type TEXT,
-        face_match_score REAL,
-        name_match_score REAL,
-        quality_score REAL,
-        tampering_score REAL,
-        is_duplicate BOOLEAN DEFAULT 0,
-        processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY(registration_id) REFERENCES registrations(id)
-    );
-    """)
-
-    cursor.execute("""
-    CREATE TABLE id_hashes (
-        hash TEXT PRIMARY KEY,
-        id_type TEXT NOT NULL,
-        id_number_masked TEXT NOT NULL,
-        registrant_name TEXT NOT NULL,
-        registration_id TEXT NOT NULL,
-        event_id TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-    """)
-
-    # Seed Default Event
-    cursor.execute("""
-    INSERT INTO events (id, name, min_age, student_only, allowed_id_types)
-    VALUES (?, ?, ?, ?, ?);
-    """, (
-        "hackathon-2026",
-        "AI Build Challenge Bengaluru 2026",
-        18,
-        0,
-        json.dumps(["aadhaar", "pan", "college_id", "voter_id"])
-    ))
+    now = datetime.utcnow()
 
     # Comprehensive Brand New Demo Datasets
     records = [
@@ -455,110 +380,6 @@ def seed_database():
 
     now = datetime.now()
 
-    for item in records:
-        time_stamp = (now - timedelta(minutes=item["min_ago"])).strftime("%Y-%m-%d %H:%M:%S")
-
-        # Insert Registration
-        cursor.execute("""
-        INSERT INTO registrations (id, event_id, form_name, form_email, form_dob, created_at)
-        VALUES (?, ?, ?, ?, ?, ?);
-        """, (
-            item["reg_id"],
-            "hackathon-2026",
-            item["name"],
-            item["email"],
-            item["dob"],
-            time_stamp
-        ))
-
-        # Breakdown object
-        breakdown = {
-            "quality": {
-                "score": item["quality_score"],
-                "blur_score": 240.0 if "blurry_image" not in item["flags"] else 38.0,
-                "tampering_score": item["tampering_score"],
-                "resolution_ok": True,
-                "detected_doc_type": item["id_type"]
-            },
-            "extraction": {
-                "score": 0.90,
-                "name": item["extracted_name"],
-                "date_of_birth": item["dob"],
-                "id_number_masked": item["id_masked"],
-                "id_type": item["id_type"],
-                "format_valid": True,
-                "checksum_valid": True
-            },
-            "identity": {
-                "face_match_score": item["face_score"],
-                "face_match_verdict": "match" if item["face_score"] and item["face_score"] > 0.6 else "mismatch",
-                "name_match_score": item["name_score"],
-                "name_match_verdict": "match" if item["name_score"] >= 85 else ("uncertain" if item["name_score"] >= 65 else "mismatch")
-            },
-            "duplicate": {
-                "is_duplicate": item["is_dup"],
-                "details": item["reason"] if item["is_dup"] else "No duplicates found. First-time registration."
-            },
-            "eligibility": {
-                "age_check": "fail" if "underage" in str(item["flags"]) else "pass",
-                "student_check": "pass"
-            }
-        }
-
-        # Insert Verification
-        cursor.execute("""
-        INSERT INTO verifications (
-            id, registration_id, decision, confidence, reason, flags, breakdown,
-            extracted_name, extracted_dob, extracted_id_number_masked, extracted_id_type,
-            face_match_score, name_match_score, quality_score, tampering_score, is_duplicate, processed_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-        """, (
-            f"ver_{item['reg_id']}",
-            item["reg_id"],
-            item["decision"],
-            item["confidence"],
-            item["reason"],
-            json.dumps(item["flags"]),
-            json.dumps(breakdown),
-            item["extracted_name"],
-            item["dob"],
-            item["id_masked"],
-            item["id_type"],
-            item["face_score"],
-            item["name_score"],
-            item["quality_score"],
-            item["tampering_score"],
-            1 if item["is_dup"] else 0,
-            time_stamp
-        ))
-
-        # Only insert into id_hashes if not already in hashes
-        id_hash = hashlib.sha256(f"{item['id_type']}:{item['id_num_clean']}".encode("utf-8")).hexdigest()
-        cursor.execute("SELECT COUNT(*) FROM id_hashes WHERE hash = ?;", (id_hash,))
-        if cursor.fetchone()[0] == 0:
-            cursor.execute("""
-            INSERT INTO id_hashes (hash, id_type, id_number_masked, registrant_name, registration_id, event_id, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?);
-            """, (
-                id_hash,
-                item["id_type"],
-                item["id_masked"],
-                item["name"],
-                item["reg_id"],
-                "hackathon-2026",
-                time_stamp
-            ))
-
-    conn.commit()
-    conn.close()
-
-    # Seed into Supabase by default
-    from app.database import get_supabase_client
-    client = get_supabase_client()
-    if not client:
-        print("[WARN] Supabase client could not be initialized. Check SUPABASE_URL and SUPABASE_KEY in .env")
-        return
-    
     print("[INFO] Seeding demo registrations directly into Supabase Cloud...")
     try:
         # 1. Upsert Event

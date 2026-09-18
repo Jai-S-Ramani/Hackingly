@@ -1,7 +1,6 @@
 import hashlib
 import re
 from typing import Dict, Any, Optional
-from app.database import get_connection
 
 class DuplicateDetector:
     def __init__(self):

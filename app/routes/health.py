@@ -8,9 +8,10 @@ router = APIRouter(tags=["Health"])
 
 @router.get("/health", response_model=HealthResponse)
 def health_check():
-    db_status = "supabase_connected" if is_supabase_active() else "sqlite_connected"
+    active = is_supabase_active()
+    db_status = "supabase_connected" if active else "supabase_disconnected"
     return {
-        "status": "healthy",
+        "status": "healthy" if active else "degraded",
         "version": "1.0.0",
         "ocr_engine": config["ocr"].get("engine", "easyocr"),
         "database": db_status

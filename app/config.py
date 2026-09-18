@@ -39,8 +39,7 @@ DEFAULT_CONFIG = {
         "review_threshold": 0.50,
     },
     "database": {
-        "provider": os.getenv("DATABASE_PROVIDER", "supabase"),
-        "db_path": str(BASE_DIR / "data" / "verifyai.db"),
+        "provider": "supabase",
         "supabase_url": os.getenv("SUPABASE_URL", "https://ejchzurnyvzhqcsqmbrl.supabase.co"),
         "supabase_key": os.getenv("SUPABASE_KEY", "sb_publishable_Gpbr08o4g-iXHyqHTxumlg_uX0HfV5L"),
     },
