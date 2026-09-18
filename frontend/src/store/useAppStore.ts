@@ -28,6 +28,9 @@ interface AppState {
   activePreset: JudgePreset | null;
   setActivePreset: (preset: JudgePreset | null) => void;
 
+  pendingUploadFile: File | null;
+  setPendingUploadFile: (file: File | null) => void;
+
   telemetry: TelemetryMetrics | null;
   fetchRegistrations: () => Promise<void>;
   fetchTelemetry: () => Promise<void>;
@@ -63,6 +66,9 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   activePreset: null,
   setActivePreset: (activePreset) => set({ activePreset }),
+
+  pendingUploadFile: null,
+  setPendingUploadFile: (pendingUploadFile) => set({ pendingUploadFile }),
 
   telemetry: null,
 

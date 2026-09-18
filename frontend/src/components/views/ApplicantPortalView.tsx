@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Camera, 
   CheckCircle2, 
@@ -8,7 +8,9 @@ import {
   User, 
   CreditCard, 
   Calendar,
-  FileText
+  FileText,
+  UploadCloud,
+  X
 } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
@@ -49,18 +51,51 @@ function validateVerhoeff(str: string): boolean {
 }
 
 export const ApplicantPortalView: React.FC = () => {
-  const { fetchRegistrations, setActiveTab } = useAppStore();
+  const { fetchRegistrations, setActiveTab, pendingUploadFile, setPendingUploadFile } = useAppStore();
   const [fullName, setFullName] = useState('Ananya Iyer');
   const [idType, setIdType] = useState<'aadhaar' | 'pan' | 'college_id'>('aadhaar');
   const [idNumber, setIdNumber] = useState('453289012345');
   const [dob, setDob] = useState('2003-05-14');
   const [idFile, setIdFile] = useState<File | null>(null);
   const [selfieFile, setSelfieFile] = useState<File | null>(null);
+  const [idPreview, setIdPreview] = useState<string | null>(null);
+  const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
+  const [isIdDragOver, setIsIdDragOver] = useState(false);
+  const [isSelfieDragOver, setIsSelfieDragOver] = useState(false);
   
   const [isVerhoeffValid, setIsVerhoeffValid] = useState<boolean | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [submissionResult, setSubmissionResult] = useState<any>(null);
+
+  useEffect(() => {
+    if (pendingUploadFile) {
+      setIdFile(pendingUploadFile);
+      const url = URL.createObjectURL(pendingUploadFile);
+      setIdPreview(url);
+      setPendingUploadFile(null);
+    }
+  }, [pendingUploadFile, setPendingUploadFile]);
+
+  const handleIdFileSelect = (file: File | null) => {
+    if (idPreview) URL.revokeObjectURL(idPreview);
+    setIdFile(file);
+    if (file) {
+      setIdPreview(URL.createObjectURL(file));
+    } else {
+      setIdPreview(null);
+    }
+  };
+
+  const handleSelfieFileSelect = (file: File | null) => {
+    if (selfiePreview) URL.revokeObjectURL(selfiePreview);
+    setSelfieFile(file);
+    if (file) {
+      setSelfiePreview(URL.createObjectURL(file));
+    } else {
+      setSelfiePreview(null);
+    }
+  };
 
   const handleIdNumberBlur = () => {
     if (idType === 'aadhaar') {
@@ -270,49 +305,161 @@ export const ApplicantPortalView: React.FC = () => {
             {/* Upload Boxes: ID Photo & Selfie */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
               {/* ID Document Box */}
-              <div 
-                onClick={() => document.getElementById('id_upload')?.click()}
-                className="p-4 rounded-xl border border-dashed border-slate-300 hover:border-indigo-500 dark:border-white/15 dark:hover:border-indigo-500/50 bg-slate-50/70 hover:bg-slate-100 dark:bg-slate-950/40 dark:hover:bg-slate-950/80 transition-all cursor-pointer text-center space-y-2 group"
-              >
+              <div>
                 <input
                   type="file"
                   id="id_upload"
                   className="hidden"
-                  accept="image/*"
-                  onChange={(e) => setIdFile(e.target.files?.[0] || null)}
+                  accept="image/jpeg,image/png,image/webp,image/*,.jpg,.jpeg,.png,.webp"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    handleIdFileSelect(file);
+                    e.target.value = '';
+                  }}
                 />
-                <div className="w-9 h-9 rounded-xl bg-slate-200 dark:bg-white/5 flex items-center justify-center mx-auto text-slate-600 dark:text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
-                  <FileText className="w-5 h-5" />
-                </div>
-                <div>
-                  <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 block">
-                    {idFile ? idFile.name : "Upload ID Document"}
-                  </span>
-                  <span className="text-[10px] text-slate-500">Aadhaar, PAN, College ID (PNG, JPG)</span>
-                </div>
+                <label 
+                  htmlFor="id_upload"
+                  onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setIsIdDragOver(true); }}
+                  onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setIsIdDragOver(false); }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsIdDragOver(false);
+                    if (e.dataTransfer.files?.[0]) {
+                      handleIdFileSelect(e.dataTransfer.files[0]);
+                    }
+                  }}
+                  className={`block p-4 rounded-xl border-2 border-dashed transition-all cursor-pointer text-center space-y-2 group relative overflow-hidden ${
+                    isIdDragOver 
+                      ? 'border-indigo-500 bg-indigo-500/10' 
+                      : idFile 
+                        ? 'border-emerald-500/50 bg-emerald-50/50 dark:bg-emerald-950/20' 
+                        : 'border-slate-300 hover:border-indigo-500 dark:border-white/15 dark:hover:border-indigo-500/50 bg-slate-50/70 hover:bg-slate-100 dark:bg-slate-950/40 dark:hover:bg-slate-950/80'
+                  }`}
+                >
+                  {idPreview ? (
+                    <div className="space-y-2">
+                      <div className="relative inline-block mx-auto">
+                        <img 
+                          src={idPreview} 
+                          alt="ID Preview" 
+                          className="h-28 w-auto max-w-full mx-auto rounded-lg object-contain border border-slate-200 dark:border-white/10 shadow-sm" 
+                        />
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleIdFileSelect(null);
+                          }}
+                          className="absolute -top-2 -right-2 p-1 rounded-full bg-slate-800 text-white hover:bg-rose-600 transition-colors shadow cursor-pointer"
+                          title="Remove image"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                      <div className="flex items-center justify-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                        <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
+                        <span className="truncate max-w-[170px]">{idFile?.name}</span>
+                      </div>
+                      <span className="text-[10px] text-slate-500 block">Click or drop to replace document</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-white/5 flex items-center justify-center mx-auto text-indigo-600 dark:text-indigo-400 group-hover:scale-105 transition-transform">
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 block">
+                          Upload ID Document
+                        </span>
+                        <span className="text-[10px] text-slate-500 block">Click to browse or drag & drop</span>
+                        <span className="inline-block mt-1 text-[10px] font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full">
+                          PNG, JPG, WebP
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </label>
               </div>
 
               {/* Live Selfie Box */}
-              <div 
-                onClick={() => document.getElementById('selfie_upload')?.click()}
-                className="p-4 rounded-xl border border-dashed border-slate-300 hover:border-emerald-500 dark:border-white/15 dark:hover:border-emerald-500/50 bg-slate-50/70 hover:bg-slate-100 dark:bg-slate-950/40 dark:hover:bg-slate-950/80 transition-all cursor-pointer text-center space-y-2 group"
-              >
+              <div>
                 <input
                   type="file"
                   id="selfie_upload"
                   className="hidden"
-                  accept="image/*"
-                  onChange={(e) => setSelfieFile(e.target.files?.[0] || null)}
+                  accept="image/jpeg,image/png,image/webp,image/*,.jpg,.jpeg,.png,.webp"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    handleSelfieFileSelect(file);
+                    e.target.value = '';
+                  }}
                 />
-                <div className="w-9 h-9 rounded-xl bg-slate-200 dark:bg-white/5 flex items-center justify-center mx-auto text-slate-600 dark:text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
-                  <Camera className="w-5 h-5" />
-                </div>
-                <div>
-                  <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 block">
-                    {selfieFile ? selfieFile.name : "Upload / Capture Selfie"}
-                  </span>
-                  <span className="text-[10px] text-slate-500">Live facial photo for biometric match</span>
-                </div>
+                <label 
+                  htmlFor="selfie_upload"
+                  onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setIsSelfieDragOver(true); }}
+                  onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setIsSelfieDragOver(false); }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsSelfieDragOver(false);
+                    if (e.dataTransfer.files?.[0]) {
+                      handleSelfieFileSelect(e.dataTransfer.files[0]);
+                    }
+                  }}
+                  className={`block p-4 rounded-xl border-2 border-dashed transition-all cursor-pointer text-center space-y-2 group relative overflow-hidden ${
+                    isSelfieDragOver 
+                      ? 'border-emerald-500 bg-emerald-500/10' 
+                      : selfieFile 
+                        ? 'border-emerald-500/50 bg-emerald-50/50 dark:bg-emerald-950/20' 
+                        : 'border-slate-300 hover:border-emerald-500 dark:border-white/15 dark:hover:border-emerald-500/50 bg-slate-50/70 hover:bg-slate-100 dark:bg-slate-950/40 dark:hover:bg-slate-950/80'
+                  }`}
+                >
+                  {selfiePreview ? (
+                    <div className="space-y-2">
+                      <div className="relative inline-block mx-auto">
+                        <img 
+                          src={selfiePreview} 
+                          alt="Selfie Preview" 
+                          className="h-28 w-auto max-w-full mx-auto rounded-lg object-contain border border-slate-200 dark:border-white/10 shadow-sm" 
+                        />
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleSelfieFileSelect(null);
+                          }}
+                          className="absolute -top-2 -right-2 p-1 rounded-full bg-slate-800 text-white hover:bg-rose-600 transition-colors shadow cursor-pointer"
+                          title="Remove selfie"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                      <div className="flex items-center justify-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                        <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
+                        <span className="truncate max-w-[170px]">{selfieFile?.name}</span>
+                      </div>
+                      <span className="text-[10px] text-slate-500 block">Click or drop to replace selfie</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-white/5 flex items-center justify-center mx-auto text-emerald-600 dark:text-emerald-400 group-hover:scale-105 transition-transform">
+                        <Camera className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 block">
+                          Upload / Capture Selfie
+                        </span>
+                        <span className="text-[10px] text-slate-500 block">Live facial portrait for biometric match</span>
+                        <span className="inline-block mt-1 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                          Optional Match Step
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </label>
               </div>
             </div>
 

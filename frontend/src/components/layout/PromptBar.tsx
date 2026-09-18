@@ -5,7 +5,7 @@ import { Paperclip, ArrowUp, Sparkles } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 
 export const PromptBar: React.FC = () => {
-  const { setActiveTab, setCommandPaletteOpen } = useAppStore();
+  const { setActiveTab, setCommandPaletteOpen, setPendingUploadFile } = useAppStore();
   const [inputVal, setInputVal] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -23,8 +23,12 @@ export const PromptBar: React.FC = () => {
     setInputVal('');
   };
 
-  const handleFileSelect = () => {
-    setActiveTab('portal');
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setPendingUploadFile(file);
+      setActiveTab('portal');
+    }
   };
 
   return (
@@ -39,7 +43,7 @@ export const PromptBar: React.FC = () => {
           ref={fileInputRef} 
           onChange={handleFileSelect} 
           className="hidden" 
-          accept="image/*"
+          accept="image/jpeg,image/png,image/webp,image/*,.jpg,.jpeg,.png,.webp"
         />
 
         {/* Attachment Paperclip Button */}
